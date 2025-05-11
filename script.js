@@ -6,7 +6,6 @@ const CLIENT_ID = '683998895208-c0eappqqhfum6g4s05iq91nkj0e9j98t.apps.googleuser
 // Initialize the form and expenses list
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('expenseForm');
-    const expensesList = document.getElementById('expensesList');
     const addPartyForm = document.getElementById('addPartyForm');
     const modal = document.getElementById('addPartyModal');
     const closeBtn = document.querySelector('.close');
@@ -146,13 +145,15 @@ function showLoginButton() {
 
 // Function to handle login button click
 function handleAuthClick() {
+    // Using currentonly scope but with a specific spreadsheet context
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${CLIENT_ID}` +
         `&redirect_uri=${encodeURIComponent(window.location.href)}` +
         `&response_type=token` +
-        `&scope=${encodeURIComponent('https://www.googleapis.com/auth/spreadsheets')}` +
+        `&scope=${encodeURIComponent('https://www.googleapis.com/auth/spreadsheets.currentonly')}` +
         `&include_granted_scopes=true` +
-        `&prompt=consent`;
+        `&prompt=consent` +
+        `&state=${encodeURIComponent(SPREADSHEET_ID)}`; // Pass spreadsheet ID in state parameter
 
     window.location.href = authUrl;
 }
@@ -167,9 +168,11 @@ function handleAuthCallback() {
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
+    const state = params.get('state'); // Get the spreadsheet ID from state
     
     if (accessToken) {
         localStorage.setItem('access_token', accessToken);
+        localStorage.setItem('spreadsheet_id', state); // Store the spreadsheet ID
         window.location.hash = ''; // Clear the hash
         loadExpenses();
     }
@@ -186,7 +189,8 @@ async function addExpense(expense) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+            'X-Goog-Spreadsheet-Id': SPREADSHEET_ID // Add spreadsheet ID in header
         },
         body: JSON.stringify({
             values: [[
@@ -215,7 +219,8 @@ async function loadExpenses() {
     try {
         const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E`, {
             headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+                'X-Goog-Spreadsheet-Id': SPREADSHEET_ID // Add spreadsheet ID in header
             }
         });
 
