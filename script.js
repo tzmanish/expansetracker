@@ -167,16 +167,17 @@ function showLoginButton() {
 
 // Function to handle login button click
 function handleAuthClick() {
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${CLIENT_ID}` +
-        `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
-        `&response_type=token` +
-        `&scope=${encodeURIComponent('https://www.googleapis.com/auth/spreadsheets.currentonly')}` +
-        `&include_granted_scopes=true` +
-        `&prompt=consent` +
-        `&state=${encodeURIComponent(SPREADSHEET_ID)}`;
-
-    window.location.href = authUrl;
+    const client = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/spreadsheets.currentonly',
+        callback: (response) => {
+            if (response.access_token) {
+                localStorage.setItem('access_token', response.access_token);
+                loadExpenses();
+            }
+        }
+    });
+    client.requestAccessToken();
 }
 
 // Function to check if user is authenticated
@@ -184,76 +185,61 @@ function isAuthenticated() {
     return !!localStorage.getItem('access_token');
 }
 
-// Function to handle OAuth callback
-function handleAuthCallback() {
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get('access_token');
-    const state = params.get('state');
-    
-    if (accessToken) {
-        localStorage.setItem('access_token', accessToken);
-        localStorage.setItem('spreadsheet_id', state);
-        window.location.hash = '';
-        
-        // Set the access token for the Google API client
-        gapi.client.setToken({
-            access_token: accessToken
-        });
-        
-        loadExpenses();
-    }
-}
-
-// Check for OAuth callback
-if (window.location.hash) {
-    handleAuthCallback();
-}
-
 // Function to add a new expense
 async function addExpense(expense) {
-    try {
-        const response = await gapi.client.sheets.spreadsheets.values.append({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:E`,
-            valueInputOption: 'USER_ENTERED',
-            resource: {
-                values: [[
-                    expense.date,
-                    expense.spender,
-                    expense.receiver,
-                    expense.amount,
-                    expense.remarks
-                ]]
-            }
-        });
+    const token = localStorage.getItem('access_token');
+    if (!token) throw new Error('Not authenticated');
 
-        if (response.status !== 200) {
-            throw new Error('Failed to add expense');
-        }
-    } catch (error) {
-        if (error.status === 401) {
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E:append?valueInputOption=USER_ENTERED`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            values: [[
+                expense.date,
+                expense.spender,
+                expense.receiver,
+                expense.amount,
+                expense.remarks
+            ]]
+        })
+    });
+
+    if (!response.ok) {
+        if (response.status === 401) {
             localStorage.removeItem('access_token');
             showLoginButton();
             throw new Error('Please sign in again');
         }
-        throw error;
+        throw new Error('Failed to add expense');
     }
 }
 
 // Function to load expenses
 async function loadExpenses() {
     try {
-        const response = await gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:E`
+        const token = localStorage.getItem('access_token');
+        if (!token) throw new Error('Not authenticated');
+
+        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         });
 
-        if (response.status !== 200) {
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('access_token');
+                showLoginButton();
+                throw new Error('Please sign in again');
+            }
             throw new Error('Failed to load expenses');
         }
 
-        const expenses = response.result.values || [];
+        const data = await response.json();
+        const expenses = data.values || [];
         updatePartyDropdowns(expenses);
         displayExpenses(expenses);
         
@@ -266,11 +252,6 @@ async function loadExpenses() {
         }
     } catch (error) {
         console.error('Error loading expenses:', error);
-        if (error.status === 401) {
-            localStorage.removeItem('access_token');
-            showLoginButton();
-            throw new Error('Please sign in again');
-        }
         alert('Failed to load expenses. Please refresh the page.');
     }
 }
