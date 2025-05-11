@@ -12,37 +12,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize app components
 function initializeApp() {
-    const form = document.getElementById('expenseForm');
-    const addPartyForm = document.getElementById('addPartyForm');
-    const modal = document.getElementById('addPartyModal');
-    const closeBtn = document.querySelector('.close');
-    const tabButtons = document.querySelectorAll('.tab-button');
+    try {
+        const form = document.getElementById('expenseForm');
+        const addPartyForm = document.getElementById('addPartyForm');
+        const modal = document.getElementById('addPartyModal');
+        const closeBtn = document.querySelector('.close');
+        const tabButtons = document.querySelectorAll('.tab-button');
 
-    // Initialize tabs
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const target = button.getAttribute('data-tab');
-            switchTab(target);
+        if (!form || !addPartyForm || !modal || !closeBtn) {
+            console.error('Required form elements not found');
+            return;
+        }
+
+        // Initialize tabs
+        tabButtons.forEach(button => {
+            if (!button.hasAttribute('data-tab')) {
+                console.error('Tab button missing data-tab attribute:', button);
+                return;
+            }
+            button.addEventListener('click', () => {
+                const target = button.getAttribute('data-tab');
+                switchTab(target);
+            });
         });
-    });
 
-    // Handle form submission
-    form.addEventListener('submit', handleExpenseSubmit);
+        // Handle form submission
+        form.addEventListener('submit', handleExpenseSubmit);
 
-    // Handle add party form submission
-    addPartyForm.addEventListener('submit', handleAddPartySubmit);
+        // Handle add party form submission
+        addPartyForm.addEventListener('submit', handleAddPartySubmit);
 
-    // Close modal when clicking the close button
-    closeBtn.onclick = () => modal.style.display = 'none';
+        // Close modal when clicking the close button
+        closeBtn.onclick = () => modal.style.display = 'none';
 
-    // Close modal when clicking outside
-    window.onclick = (e) => {
-        if (e.target === modal) modal.style.display = 'none';
-    };
+        // Close modal when clicking outside
+        window.onclick = (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        };
 
-    // Initialize theme
-    initTheme();
-    document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
+        // Initialize theme
+        initTheme();
+        const themeToggle = document.querySelector('.theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+    } catch (error) {
+        console.error('Error initializing app:', error);
+    }
 }
 
 // Handle expense form submission
@@ -87,18 +103,28 @@ function handleAddPartySubmit(e) {
 
 // Switch between tabs
 function switchTab(target) {
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabPanes = document.querySelectorAll('.tab-pane');
-    
-    // Update active states
-    tabButtons.forEach(btn => btn.classList.remove('active'));
-    tabPanes.forEach(pane => pane.classList.remove('active'));
-    
-    // Activate selected tab
-    const selectedButton = document.querySelector(`.tab-button[data-tab="${target}"]`);
-    const selectedPane = document.querySelector(`.tab-pane[data-tab="${target}"]`);
-    
-    if (selectedButton && selectedPane) {
+    try {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        if (!tabButtons.length || !tabPanes.length) {
+            console.error('Tab elements not found');
+            return;
+        }
+        
+        // Update active states
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanes.forEach(pane => pane.classList.remove('active'));
+        
+        // Activate selected tab
+        const selectedButton = document.querySelector(`.tab-button[data-tab="${target}"]`);
+        const selectedPane = document.querySelector(`.tab-pane[data-tab="${target}"]`);
+        
+        if (!selectedButton || !selectedPane) {
+            console.error(`Tab elements for "${target}" not found`);
+            return;
+        }
+        
         selectedButton.classList.add('active');
         selectedPane.classList.add('active');
         
@@ -108,6 +134,8 @@ function switchTab(target) {
         } else if (target === 'expenses') {
             loadExpenses();
         }
+    } catch (error) {
+        console.error('Error switching tabs:', error);
     }
 }
 
