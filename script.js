@@ -140,7 +140,14 @@ function updatePartyDropdowns(expenses) {
 // Function to show login button
 function showLoginButton() {
     const appContent = document.querySelector('.app-content');
+    const authSection = document.getElementById('authSection');
+    const tabs = document.querySelector('.tabs');
+    const tabContent = document.querySelector('.tab-content');
+    
     appContent.classList.remove('authenticated');
+    authSection.style.display = 'block';
+    tabs.style.display = 'none';
+    tabContent.style.display = 'none';
 }
 
 // Function to check if user is authenticated
@@ -158,7 +165,14 @@ function handleAuthCallback() {
         localStorage.setItem('access_token', accessToken);
         window.location.hash = ''; // Clear the hash
         const appContent = document.querySelector('.app-content');
+        const authSection = document.getElementById('authSection');
+        const tabs = document.querySelector('.tabs');
+        const tabContent = document.querySelector('.tab-content');
+        
         appContent.classList.add('authenticated');
+        authSection.style.display = 'none';
+        tabs.style.display = 'flex';
+        tabContent.style.display = 'block';
         loadExpenses();
     }
 }
@@ -167,12 +181,18 @@ function handleAuthCallback() {
 async function checkAuth() {
     const token = localStorage.getItem('access_token');
     const appContent = document.querySelector('.app-content');
+    const authSection = document.getElementById('authSection');
+    const tabs = document.querySelector('.tabs');
+    const tabContent = document.querySelector('.tab-content');
     
     if (token) {
         try {
             // Verify token is still valid
             await loadExpenses();
             appContent.classList.add('authenticated');
+            authSection.style.display = 'none';
+            tabs.style.display = 'flex';
+            tabContent.style.display = 'block';
         } catch (error) {
             // Token expired or invalid
             localStorage.removeItem('access_token');
@@ -181,6 +201,12 @@ async function checkAuth() {
     } else {
         showLoginButton();
     }
+}
+
+// Function to handle auth click
+function handleAuthClick() {
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=https://www.googleapis.com/auth/spreadsheets&include_granted_scopes=true`;
+    window.location.href = authUrl;
 }
 
 // Check for OAuth callback
