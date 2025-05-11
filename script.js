@@ -1,3 +1,7 @@
+import { handleAuthClick, checkAuth } from './auth.js';
+import { handleExpenseSubmit, handleAddPartySubmit, showAddPartyModal, initTheme, toggleTheme, switchTab } from './ui.js';
+import { loadExpenses } from './expenses.js';
+
 // Google Sheets API configuration
 const SPREADSHEET_ID = '1Hj_kCide2ZJbpSKltBGS_wjLyqzYdZM7if0bBgZu2d0';
 const SHEET_NAME = 'Expenses';
@@ -5,178 +9,46 @@ const CLIENT_ID = '683998895208-c0eappqqhfum6g4s05iq91nkj0e9j98t.apps.googleuser
 const REDIRECT_URI = 'https://manishkushwaha.dev/expansetracker/';
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for a short delay to ensure all elements are rendered
-    setTimeout(() => {
-        initializeApp();
-        checkAuth();
-    }, 100);
-});
-
-// Initialize app components
 function initializeApp() {
     try {
-        const form = document.getElementById('expenseForm');
-        const addPartyForm = document.getElementById('addPartyForm');
-        const modal = document.getElementById('addPartyModal');
-        const closeBtn = document.querySelector('.close');
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabPanes = document.querySelectorAll('.tab-pane');
-
-        // Validate all required elements exist
-        const requiredElements = {
-            form,
-            addPartyForm,
-            modal,
-            closeBtn,
-            tabButtons,
-            tabPanes
-        };
-
-        const missingElements = Object.entries(requiredElements)
-            .filter(([_, element]) => !element || (Array.isArray(element) && element.length === 0))
-            .map(([name]) => name);
-
-        if (missingElements.length > 0) {
-            console.error('Missing required elements:', missingElements);
-            return;
-        }
-
-        // Initialize tabs
-        tabButtons.forEach(button => {
-            const target = button.getAttribute('data-tab');
-            if (!target) {
-                console.error('Tab button missing data-tab attribute:', button);
-                return;
-            }
-
-            // Verify corresponding tab pane exists
-            const tabPane = document.querySelector(`.tab-pane[data-tab="${target}"]`);
-            if (!tabPane) {
-                console.error(`Tab pane not found for tab: ${target}`);
-                return;
-            }
-
-            button.addEventListener('click', () => switchTab(target));
-        });
-
-        // Handle form submission
-        form.addEventListener('submit', handleExpenseSubmit);
-        addPartyForm.addEventListener('submit', handleAddPartySubmit);
-
-        // Close modal when clicking the close button or outside
-        closeBtn.onclick = () => modal.style.display = 'none';
-        window.onclick = (e) => {
-            if (e.target === modal) modal.style.display = 'none';
-        };
-
         // Initialize theme
         initTheme();
-        const themeToggle = document.querySelector('.theme-toggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', toggleTheme);
-        }
 
-        // Set initial active tab
-        const initialTab = document.querySelector('.tab-button.active');
-        if (initialTab) {
-            const target = initialTab.getAttribute('data-tab');
-            if (target) {
-                switchTab(target);
+        // Set up event listeners
+        document.getElementById('expenseForm')?.addEventListener('submit', handleExpenseSubmit);
+        document.getElementById('addPartyForm')?.addEventListener('submit', handleAddPartySubmit);
+        document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+
+        // Add party modal buttons
+        document.querySelectorAll('.add-party-btn').forEach(btn => {
+            btn.addEventListener('click', () => showAddPartyModal(btn.dataset.target));
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => switchTab(button.getAttribute('data-tab')));
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('addPartyModal');
+            if (e.target === modal) {
+                modal.style.display = 'none';
             }
-        } else {
-            // If no active tab is set, activate the first tab
-            const firstTab = tabButtons[0];
-            if (firstTab) {
-                const target = firstTab.getAttribute('data-tab');
-                if (target) {
-                    switchTab(target);
-                }
-            }
-        }
+        });
+
+        // Check authentication status
+        checkAuth();
+
+        // Load initial data
+        loadExpenses();
     } catch (error) {
         console.error('Error initializing app:', error);
     }
 }
 
-// Handle expense form submission
-async function handleExpenseSubmit(e) {
-    e.preventDefault();
-
-    if (!isAuthenticated()) {
-        alert('Please sign in to add expenses');
-        return;
-    }
-
-    const formData = {
-        spender: document.getElementById('spender').value,
-        receiver: document.getElementById('receiver').value,
-        amount: document.getElementById('amount').value,
-        remarks: document.getElementById('remarks').value,
-        date: new Date().toISOString()
-    };
-
-    try {
-        await addExpense(formData);
-        e.target.reset();
-        await loadExpenses();
-    } catch (error) {
-        console.error('Error adding expense:', error);
-        alert('Failed to add expense. Please try again.');
-    }
-}
-
-// Handle add party form submission
-function handleAddPartySubmit(e) {
-    e.preventDefault();
-    const newPartyName = document.getElementById('newPartyName').value;
-    const targetField = e.target.closest('.modal').dataset.target;
-    
-    addPartyToDropdowns(newPartyName);
-    document.getElementById(targetField).value = newPartyName;
-    
-    e.target.closest('.modal').style.display = 'none';
-    e.target.reset();
-}
-
-// Switch between tabs
-function switchTab(target) {
-    try {
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabPanes = document.querySelectorAll('.tab-pane');
-        
-        if (!tabButtons.length || !tabPanes.length) {
-            console.error('Tab elements not found');
-            return;
-        }
-        
-        // Find the target elements
-        const selectedButton = Array.from(tabButtons).find(btn => btn.getAttribute('data-tab') === target);
-        const selectedPane = Array.from(tabPanes).find(pane => pane.getAttribute('data-tab') === target);
-        
-        if (!selectedButton || !selectedPane) {
-            console.error(`Tab elements for "${target}" not found`);
-            return;
-        }
-        
-        // Update active states
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        tabPanes.forEach(pane => pane.classList.remove('active'));
-        
-        // Activate selected tab
-        selectedButton.classList.add('active');
-        selectedPane.classList.add('active');
-        
-        // Update content based on selected tab
-        if (target === 'summary') {
-            updateSummary();
-        } else if (target === 'expenses') {
-            loadExpenses();
-        }
-    } catch (error) {
-        console.error('Error switching tabs:', error);
-    }
-}
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeApp);
 
 // Authentication functions
 function handleAuthClick() {

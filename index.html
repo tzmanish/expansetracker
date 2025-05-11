@@ -58,6 +58,9 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" 
               rel="stylesheet">
     </noscript>
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div class="app-container">
@@ -75,8 +78,8 @@
                     <i class="fas fa-lock auth-icon" aria-hidden="true"></i>
                     <h2>Sign in to Access Expense Tracker</h2>
                     <p>Please sign in with your Google account to manage your expenses.</p>
-                    <button onclick="handleAuthClick()" class="google-signin-button">
-                        <i class="fab fa-google" aria-hidden="true"></i>
+                    <button id="loginButton" class="google-signin-button">
+                        <img src="https://www.google.com/favicon.ico" alt="Google">
                         Sign in with Google
                     </button>
                 </div>
@@ -185,7 +188,6 @@
         </div>
     </div>
 
-    <!-- Deferred script loading -->
-    <script src="script.js" defer></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html> 
