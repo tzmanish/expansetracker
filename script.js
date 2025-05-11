@@ -4,71 +4,92 @@ const SHEET_NAME = 'Sheet1';
 const CLIENT_ID = '683998895208-c0eappqqhfum6g4s05iq91nkj0e9j98t.apps.googleusercontent.com';
 const REDIRECT_URI = 'https://manishkushwaha.dev/expansetracker/';
 
+// Initialize the Google Sheets API
+function initGoogleSheetsAPI() {
+    return new Promise((resolve, reject) => {
+        gapi.load('client', async () => {
+            try {
+                await gapi.client.init({
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+                });
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
+        });
+    });
+}
+
 // Initialize the form and expenses list
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('expenseForm');
-    const addPartyForm = document.getElementById('addPartyForm');
-    const modal = document.getElementById('addPartyModal');
-    const closeBtn = document.querySelector('.close');
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await initGoogleSheetsAPI();
+        const form = document.getElementById('expenseForm');
+        const addPartyForm = document.getElementById('addPartyForm');
+        const modal = document.getElementById('addPartyModal');
+        const closeBtn = document.querySelector('.close');
 
-    // Check if user is authenticated
-    checkAuth();
+        // Check if user is authenticated
+        checkAuth();
 
-    // Handle form submission
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        if (!isAuthenticated()) {
-            alert('Please sign in to add expenses');
-            return;
-        }
+            if (!isAuthenticated()) {
+                alert('Please sign in to add expenses');
+                return;
+            }
 
-        const formData = {
-            spender: document.getElementById('spender').value,
-            receiver: document.getElementById('receiver').value,
-            amount: document.getElementById('amount').value,
-            remarks: document.getElementById('remarks').value,
-            date: new Date().toISOString()
+            const formData = {
+                spender: document.getElementById('spender').value,
+                receiver: document.getElementById('receiver').value,
+                amount: document.getElementById('amount').value,
+                remarks: document.getElementById('remarks').value,
+                date: new Date().toISOString()
+            };
+
+            try {
+                await addExpense(formData);
+                form.reset();
+                loadExpenses();
+            } catch (error) {
+                console.error('Error adding expense:', error);
+                alert('Failed to add expense. Please try again.');
+            }
+        });
+
+        // Handle add party form submission
+        addPartyForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newPartyName = document.getElementById('newPartyName').value;
+            const targetField = modal.dataset.target;
+            
+            // Add new party to both dropdowns
+            addPartyToDropdowns(newPartyName);
+            
+            // Select the new party in the target dropdown
+            document.getElementById(targetField).value = newPartyName;
+            
+            // Close modal and reset form
+            modal.style.display = 'none';
+            addPartyForm.reset();
+        });
+
+        // Close modal when clicking the close button
+        closeBtn.onclick = () => {
+            modal.style.display = 'none';
         };
 
-        try {
-            await addExpense(formData);
-            form.reset();
-            loadExpenses();
-        } catch (error) {
-            console.error('Error adding expense:', error);
-            alert('Failed to add expense. Please try again.');
-        }
-    });
-
-    // Handle add party form submission
-    addPartyForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newPartyName = document.getElementById('newPartyName').value;
-        const targetField = modal.dataset.target;
-        
-        // Add new party to both dropdowns
-        addPartyToDropdowns(newPartyName);
-        
-        // Select the new party in the target dropdown
-        document.getElementById(targetField).value = newPartyName;
-        
-        // Close modal and reset form
-        modal.style.display = 'none';
-        addPartyForm.reset();
-    });
-
-    // Close modal when clicking the close button
-    closeBtn.onclick = () => {
-        modal.style.display = 'none';
-    };
-
-    // Close modal when clicking outside
-    window.onclick = (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    };
+        // Close modal when clicking outside
+        window.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    } catch (error) {
+        console.error('Error initializing Google Sheets API:', error);
+    }
 });
 
 // Function to show add party modal
@@ -152,6 +173,10 @@ function handleAuthClick() {
         callback: (response) => {
             if (response.access_token) {
                 localStorage.setItem('access_token', response.access_token);
+                // Set the access token for the Google API client
+                gapi.client.setToken({
+                    access_token: response.access_token
+                });
                 loadExpenses();
             }
         }
@@ -166,61 +191,48 @@ function isAuthenticated() {
 
 // Function to add a new expense
 async function addExpense(expense) {
-    const token = localStorage.getItem('access_token');
-    if (!token) throw new Error('Not authenticated');
+    try {
+        const response = await gapi.client.sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A:E`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [[
+                    expense.date,
+                    expense.spender,
+                    expense.receiver,
+                    expense.amount,
+                    expense.remarks
+                ]]
+            }
+        });
 
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E:append?valueInputOption=USER_ENTERED`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'X-Goog-Spreadsheet-Id': SPREADSHEET_ID
-        },
-        body: JSON.stringify({
-            values: [[
-                expense.date,
-                expense.spender,
-                expense.receiver,
-                expense.amount,
-                expense.remarks
-            ]]
-        })
-    });
-
-    if (!response.ok) {
-        if (response.status === 401) {
+        if (response.status !== 200) {
+            throw new Error('Failed to add expense');
+        }
+    } catch (error) {
+        if (error.status === 401) {
             localStorage.removeItem('access_token');
             showLoginButton();
             throw new Error('Please sign in again');
         }
-        throw new Error('Failed to add expense');
+        throw error;
     }
 }
 
 // Function to load expenses
 async function loadExpenses() {
     try {
-        const token = localStorage.getItem('access_token');
-        if (!token) throw new Error('Not authenticated');
-
-        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'X-Goog-Spreadsheet-Id': SPREADSHEET_ID
-            }
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A:E`
         });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                localStorage.removeItem('access_token');
-                showLoginButton();
-                throw new Error('Please sign in again');
-            }
+        if (response.status !== 200) {
             throw new Error('Failed to load expenses');
         }
 
-        const data = await response.json();
-        const expenses = data.values || [];
+        const expenses = response.result.values || [];
         updatePartyDropdowns(expenses);
         displayExpenses(expenses);
         
@@ -233,6 +245,11 @@ async function loadExpenses() {
         }
     } catch (error) {
         console.error('Error loading expenses:', error);
+        if (error.status === 401) {
+            localStorage.removeItem('access_token');
+            showLoginButton();
+            throw new Error('Please sign in again');
+        }
         alert('Failed to load expenses. Please refresh the page.');
     }
 }
