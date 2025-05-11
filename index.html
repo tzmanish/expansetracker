@@ -166,8 +166,35 @@
     </div>
 
     <!-- Deferred script loading -->
-    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="script.js" defer></script>
+    <script>
+        // Initialize Google API client
+        function initGoogleAPI() {
+            gapi.load('client', () => {
+                gapi.client.init({
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+                }).then(() => {
+                    // Initialize the app after Google API is loaded
+                    const script = document.createElement('script');
+                    script.src = 'script.js';
+                    script.defer = true;
+                    document.body.appendChild(script);
+                }).catch(error => {
+                    console.error('Error initializing Google API:', error);
+                });
+            });
+        }
+
+        // Load Google API client
+        window.onload = function() {
+            if (typeof gapi !== 'undefined') {
+                initGoogleAPI();
+            } else {
+                // If gapi is not loaded yet, wait for it
+                window.addEventListener('load', initGoogleAPI);
+            }
+        };
+    </script>
 </body>
 </html> 

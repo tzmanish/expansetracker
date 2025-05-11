@@ -4,92 +4,71 @@ const SHEET_NAME = 'Sheet1';
 const CLIENT_ID = '683998895208-c0eappqqhfum6g4s05iq91nkj0e9j98t.apps.googleusercontent.com';
 const REDIRECT_URI = 'https://manishkushwaha.dev/expansetracker/';
 
-// Initialize the Google Sheets API
-function initGoogleSheetsAPI() {
-    return new Promise((resolve, reject) => {
-        gapi.load('client', async () => {
-            try {
-                await gapi.client.init({
-                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-                });
-                resolve();
-            } catch (error) {
-                reject(error);
-            }
-        });
-    });
-}
-
 // Initialize the form and expenses list
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        await initGoogleSheetsAPI();
-        const form = document.getElementById('expenseForm');
-        const addPartyForm = document.getElementById('addPartyForm');
-        const modal = document.getElementById('addPartyModal');
-        const closeBtn = document.querySelector('.close');
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('expenseForm');
+    const addPartyForm = document.getElementById('addPartyForm');
+    const modal = document.getElementById('addPartyModal');
+    const closeBtn = document.querySelector('.close');
 
-        // Check if user is authenticated
-        checkAuth();
+    // Check if user is authenticated
+    checkAuth();
 
-        // Handle form submission
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+    // Handle form submission
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            if (!isAuthenticated()) {
-                alert('Please sign in to add expenses');
-                return;
-            }
+        if (!isAuthenticated()) {
+            alert('Please sign in to add expenses');
+            return;
+        }
 
-            const formData = {
-                spender: document.getElementById('spender').value,
-                receiver: document.getElementById('receiver').value,
-                amount: document.getElementById('amount').value,
-                remarks: document.getElementById('remarks').value,
-                date: new Date().toISOString()
-            };
-
-            try {
-                await addExpense(formData);
-                form.reset();
-                loadExpenses();
-            } catch (error) {
-                console.error('Error adding expense:', error);
-                alert('Failed to add expense. Please try again.');
-            }
-        });
-
-        // Handle add party form submission
-        addPartyForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newPartyName = document.getElementById('newPartyName').value;
-            const targetField = modal.dataset.target;
-            
-            // Add new party to both dropdowns
-            addPartyToDropdowns(newPartyName);
-            
-            // Select the new party in the target dropdown
-            document.getElementById(targetField).value = newPartyName;
-            
-            // Close modal and reset form
-            modal.style.display = 'none';
-            addPartyForm.reset();
-        });
-
-        // Close modal when clicking the close button
-        closeBtn.onclick = () => {
-            modal.style.display = 'none';
+        const formData = {
+            spender: document.getElementById('spender').value,
+            receiver: document.getElementById('receiver').value,
+            amount: document.getElementById('amount').value,
+            remarks: document.getElementById('remarks').value,
+            date: new Date().toISOString()
         };
 
-        // Close modal when clicking outside
-        window.onclick = (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        };
-    } catch (error) {
-        console.error('Error initializing Google Sheets API:', error);
-    }
+        try {
+            await addExpense(formData);
+            form.reset();
+            loadExpenses();
+        } catch (error) {
+            console.error('Error adding expense:', error);
+            alert('Failed to add expense. Please try again.');
+        }
+    });
+
+    // Handle add party form submission
+    addPartyForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newPartyName = document.getElementById('newPartyName').value;
+        const targetField = modal.dataset.target;
+        
+        // Add new party to both dropdowns
+        addPartyToDropdowns(newPartyName);
+        
+        // Select the new party in the target dropdown
+        document.getElementById(targetField).value = newPartyName;
+        
+        // Close modal and reset form
+        modal.style.display = 'none';
+        addPartyForm.reset();
+    });
+
+    // Close modal when clicking the close button
+    closeBtn.onclick = () => {
+        modal.style.display = 'none';
+    };
+
+    // Close modal when clicking outside
+    window.onclick = (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
 });
 
 // Function to show add party modal
