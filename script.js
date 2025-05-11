@@ -25,6 +25,11 @@ function initializeApp() {
         }
 
         // Initialize tabs
+        if (tabButtons.length === 0) {
+            console.error('No tab buttons found');
+            return;
+        }
+
         tabButtons.forEach(button => {
             if (!button.hasAttribute('data-tab')) {
                 console.error('Tab button missing data-tab attribute:', button);
@@ -32,7 +37,9 @@ function initializeApp() {
             }
             button.addEventListener('click', () => {
                 const target = button.getAttribute('data-tab');
-                switchTab(target);
+                if (target) {
+                    switchTab(target);
+                }
             });
         });
 
@@ -51,6 +58,15 @@ function initializeApp() {
         const themeToggle = document.querySelector('.theme-toggle');
         if (themeToggle) {
             themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        // Set initial active tab
+        const initialTab = document.querySelector('.tab-button.active');
+        if (initialTab) {
+            const target = initialTab.getAttribute('data-tab');
+            if (target) {
+                switchTab(target);
+            }
         }
     } catch (error) {
         console.error('Error initializing app:', error);
@@ -109,8 +125,12 @@ function switchTab(target) {
         }
         
         // Update active states
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        tabPanes.forEach(pane => pane.classList.remove('active'));
+        tabButtons.forEach(btn => {
+            if (btn) btn.classList.remove('active');
+        });
+        tabPanes.forEach(pane => {
+            if (pane) pane.classList.remove('active');
+        });
         
         // Activate selected tab
         const selectedButton = document.querySelector(`.tab-button[data-tab="${target}"]`);
