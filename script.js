@@ -388,17 +388,29 @@ function updatePartyFilter(expenses) {
         // Sort parties alphabetically
         const sortedParties = Array.from(parties).sort();
 
+        // Store current selection
+        const currentSelection = filter.value;
+
         // Update dropdown options
         filter.innerHTML = `
             <option value="all">All Parties</option>
             ${sortedParties.map(party => `<option value="${party}">${party}</option>`).join('')}
         `;
 
-        // Add change event listener if not already present
-        if (!filter.hasEventListener) {
-            filter.addEventListener('change', () => updateSummary());
-            filter.hasEventListener = true;
+        // Restore selection if it still exists
+        if (currentSelection && sortedParties.includes(currentSelection)) {
+            filter.value = currentSelection;
         }
+
+        // Remove existing event listener if any
+        const newFilter = filter.cloneNode(true);
+        filter.parentNode.replaceChild(newFilter, filter);
+
+        // Add new event listener
+        newFilter.addEventListener('change', () => {
+            console.log('Party filter changed to:', newFilter.value);
+            updateSummary();
+        });
     } catch (error) {
         console.error('Error updating party filter:', error);
     }
@@ -439,6 +451,7 @@ async function updateSummary() {
 
         const expenses = await loadExpenses();
         const selectedParty = partyFilter.value;
+        console.log('Selected party:', selectedParty);
         
         // Filter expenses based on selected party
         const filteredExpenses = selectedParty === 'all' 
@@ -448,6 +461,7 @@ async function updateSummary() {
                 return spender === selectedParty || receiver === selectedParty;
             });
 
+        console.log('Filtered expenses:', filteredExpenses.length);
         const summary = calculateSummary(filteredExpenses);
         displaySummary(summary, summaryContent);
     } catch (error) {
