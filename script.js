@@ -38,14 +38,10 @@ function initializeApp() {
 
         // Handle form submission
         form.addEventListener('submit', handleExpenseSubmit);
-
-        // Handle add party form submission
         addPartyForm.addEventListener('submit', handleAddPartySubmit);
 
-        // Close modal when clicking the close button
+        // Close modal when clicking the close button or outside
         closeBtn.onclick = () => modal.style.display = 'none';
-
-        // Close modal when clicking outside
         window.onclick = (e) => {
             if (e.target === modal) modal.style.display = 'none';
         };
@@ -366,133 +362,6 @@ function toggleTheme() {
 // Check for OAuth callback
 if (window.location.hash) {
     handleAuthCallback();
-}
-
-// Function to toggle summary view
-function toggleSummaryView() {
-    const summarySection = document.getElementById('partySummary');
-    const toggleButton = document.querySelector('.summary-toggle');
-    
-    if (summarySection.style.display === 'none') {
-        summarySection.style.display = 'block';
-        toggleButton.textContent = 'Hide Summary';
-        updatePartySummary();
-    } else {
-        summarySection.style.display = 'none';
-        toggleButton.textContent = 'Show Summary';
-    }
-}
-
-// Function to update party summary
-function updatePartySummary() {
-    const expenses = getExpensesFromList();
-    const partyFilter = document.getElementById('summaryPartyFilter').value;
-    const summaryContent = document.getElementById('summaryContent');
-    
-    // Calculate summary
-    const summary = calculatePartySummary(expenses, partyFilter);
-    
-    // Create summary table
-    const table = document.createElement('table');
-    table.className = 'summary-table';
-    
-    // Add header
-    table.innerHTML = `
-        <thead>
-            <tr>
-                <th>Party</th>
-                <th>Total Spent</th>
-                <th>Total Received</th>
-                <th>Net Balance</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${Object.entries(summary)
-                .map(([party, data]) => `
-                    <tr>
-                        <td>${party}</td>
-                        <td class="amount negative">₹${data.spent.toFixed(2)}</td>
-                        <td class="amount positive">₹${data.received.toFixed(2)}</td>
-                        <td class="amount ${data.balance >= 0 ? 'positive' : 'negative'}">
-                            ₹${data.balance.toFixed(2)}
-                        </td>
-                    </tr>
-                `).join('')}
-        </tbody>
-    `;
-    
-    // Add total row
-    const totalRow = document.createElement('tr');
-    totalRow.className = 'summary-total';
-    const totals = calculateTotals(summary);
-    totalRow.innerHTML = `
-        <td>Total</td>
-        <td class="amount negative">₹${totals.spent.toFixed(2)}</td>
-        <td class="amount positive">₹${totals.received.toFixed(2)}</td>
-        <td class="amount ${totals.balance >= 0 ? 'positive' : 'negative'}">
-            ₹${totals.balance.toFixed(2)}
-        </td>
-    `;
-    table.querySelector('tbody').appendChild(totalRow);
-    
-    // Update summary content
-    summaryContent.innerHTML = '';
-    summaryContent.appendChild(table);
-}
-
-// Function to get expenses from the list
-function getExpensesFromList() {
-    const expensesList = document.getElementById('expensesList');
-    const expenses = [];
-    
-    expensesList.querySelectorAll('.expense-item').forEach(item => {
-        const date = item.querySelector('p:nth-child(1)').textContent.split(': ')[1];
-        const spender = item.querySelector('p:nth-child(2)').textContent.split(': ')[1];
-        const receiver = item.querySelector('p:nth-child(3)').textContent.split(': ')[1];
-        const amount = parseFloat(item.querySelector('.amount').textContent.split('₹')[1]);
-        const remarks = item.querySelector('.remarks')?.textContent.split(': ')[1] || '';
-        
-        expenses.push([date, spender, receiver, amount, remarks]);
-    });
-    
-    return expenses;
-}
-
-// Function to calculate party summary
-function calculatePartySummary(expenses, partyFilter) {
-    const summary = {};
-    
-    expenses.forEach(([_, spender, receiver, amount]) => {
-        // Initialize party data if not exists
-        if (!summary[spender]) {
-            summary[spender] = { spent: 0, received: 0, balance: 0 };
-        }
-        if (!summary[receiver]) {
-            summary[receiver] = { spent: 0, received: 0, balance: 0 };
-        }
-        
-        // Update summary
-        summary[spender].spent += amount;
-        summary[spender].balance -= amount;
-        summary[receiver].received += amount;
-        summary[receiver].balance += amount;
-    });
-    
-    // Filter by party if specified
-    if (partyFilter !== 'all') {
-        return { [partyFilter]: summary[partyFilter] };
-    }
-    
-    return summary;
-}
-
-// Function to calculate totals
-function calculateTotals(summary) {
-    return Object.values(summary).reduce((totals, data) => ({
-        spent: totals.spent + data.spent,
-        received: totals.received + data.received,
-        balance: totals.balance + data.balance
-    }), { spent: 0, received: 0, balance: 0 });
 }
 
 // Function to update summary
