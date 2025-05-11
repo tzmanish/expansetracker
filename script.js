@@ -6,8 +6,11 @@ const REDIRECT_URI = 'https://manishkushwaha.dev/expansetracker/';
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
-    checkAuth();
+    // Wait for a short delay to ensure all elements are rendered
+    setTimeout(() => {
+        initializeApp();
+        checkAuth();
+    }, 100);
 });
 
 // Initialize app components
@@ -18,29 +21,43 @@ function initializeApp() {
         const modal = document.getElementById('addPartyModal');
         const closeBtn = document.querySelector('.close');
         const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
 
-        if (!form || !addPartyForm || !modal || !closeBtn) {
-            console.error('Required form elements not found');
+        // Validate all required elements exist
+        const requiredElements = {
+            form,
+            addPartyForm,
+            modal,
+            closeBtn,
+            tabButtons,
+            tabPanes
+        };
+
+        const missingElements = Object.entries(requiredElements)
+            .filter(([_, element]) => !element || (Array.isArray(element) && element.length === 0))
+            .map(([name]) => name);
+
+        if (missingElements.length > 0) {
+            console.error('Missing required elements:', missingElements);
             return;
         }
 
         // Initialize tabs
-        if (tabButtons.length === 0) {
-            console.error('No tab buttons found');
-            return;
-        }
-
         tabButtons.forEach(button => {
-            if (!button.hasAttribute('data-tab')) {
+            const target = button.getAttribute('data-tab');
+            if (!target) {
                 console.error('Tab button missing data-tab attribute:', button);
                 return;
             }
-            button.addEventListener('click', () => {
-                const target = button.getAttribute('data-tab');
-                if (target) {
-                    switchTab(target);
-                }
-            });
+
+            // Verify corresponding tab pane exists
+            const tabPane = document.querySelector(`.tab-pane[data-tab="${target}"]`);
+            if (!tabPane) {
+                console.error(`Tab pane not found for tab: ${target}`);
+                return;
+            }
+
+            button.addEventListener('click', () => switchTab(target));
         });
 
         // Handle form submission
@@ -66,6 +83,15 @@ function initializeApp() {
             const target = initialTab.getAttribute('data-tab');
             if (target) {
                 switchTab(target);
+            }
+        } else {
+            // If no active tab is set, activate the first tab
+            const firstTab = tabButtons[0];
+            if (firstTab) {
+                const target = firstTab.getAttribute('data-tab');
+                if (target) {
+                    switchTab(target);
+                }
             }
         }
     } catch (error) {
@@ -124,23 +150,20 @@ function switchTab(target) {
             return;
         }
         
-        // Update active states
-        tabButtons.forEach(btn => {
-            if (btn) btn.classList.remove('active');
-        });
-        tabPanes.forEach(pane => {
-            if (pane) pane.classList.remove('active');
-        });
-        
-        // Activate selected tab
-        const selectedButton = document.querySelector(`.tab-button[data-tab="${target}"]`);
-        const selectedPane = document.querySelector(`.tab-pane[data-tab="${target}"]`);
+        // Find the target elements
+        const selectedButton = Array.from(tabButtons).find(btn => btn.getAttribute('data-tab') === target);
+        const selectedPane = Array.from(tabPanes).find(pane => pane.getAttribute('data-tab') === target);
         
         if (!selectedButton || !selectedPane) {
             console.error(`Tab elements for "${target}" not found`);
             return;
         }
         
+        // Update active states
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanes.forEach(pane => pane.classList.remove('active'));
+        
+        // Activate selected tab
         selectedButton.classList.add('active');
         selectedPane.classList.add('active');
         
