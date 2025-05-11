@@ -4,140 +4,109 @@ const SHEET_NAME = 'Expenses';
 const CLIENT_ID = '683998895208-c0eappqqhfum6g4s05iq91nkj0e9j98t.apps.googleusercontent.com';
 const REDIRECT_URI = 'https://manishkushwaha.dev/expansetracker/';
 
-// Initialize the form and expenses list
+// Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+    checkAuth();
+});
+
+// Initialize app components
+function initializeApp() {
     const form = document.getElementById('expenseForm');
-    const expensesList = document.getElementById('expensesList');
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabPanes = document.querySelectorAll('.tab-pane');
     const addPartyForm = document.getElementById('addPartyForm');
     const modal = document.getElementById('addPartyModal');
     const closeBtn = document.querySelector('.close');
+    const tabButtons = document.querySelectorAll('.tab-button');
 
     // Initialize tabs
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const target = button.getAttribute('data-tab');
-            
-            // Update active states
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-            
-            button.classList.add('active');
-            document.querySelector(`.tab-pane[data-tab="${target}"]`).classList.add('active');
-
-            // If switching to summary tab, update the summary
-            if (target === 'summary') {
-                updateSummary();
-            }
+            switchTab(target);
         });
     });
 
-    // Check if user is authenticated
-    checkAuth();
-
     // Handle form submission
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        if (!isAuthenticated()) {
-            alert('Please sign in to add expenses');
-            return;
-        }
-
-        const formData = {
-            spender: document.getElementById('spender').value,
-            receiver: document.getElementById('receiver').value,
-            amount: document.getElementById('amount').value,
-            remarks: document.getElementById('remarks').value,
-            date: new Date().toISOString()
-        };
-
-        try {
-            await addExpense(formData);
-            form.reset();
-            loadExpenses();
-        } catch (error) {
-            console.error('Error adding expense:', error);
-            alert('Failed to add expense. Please try again.');
-        }
-    });
+    form.addEventListener('submit', handleExpenseSubmit);
 
     // Handle add party form submission
-    addPartyForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newPartyName = document.getElementById('newPartyName').value;
-        const targetField = modal.dataset.target;
-        
-        // Add new party to both dropdowns
-        addPartyToDropdowns(newPartyName);
-        
-        // Select the new party in the target dropdown
-        document.getElementById(targetField).value = newPartyName;
-        
-        // Close modal and reset form
-        modal.style.display = 'none';
-        addPartyForm.reset();
-    });
+    addPartyForm.addEventListener('submit', handleAddPartySubmit);
 
     // Close modal when clicking the close button
-    closeBtn.onclick = () => {
-        modal.style.display = 'none';
-    };
+    closeBtn.onclick = () => modal.style.display = 'none';
 
     // Close modal when clicking outside
     window.onclick = (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
+        if (e.target === modal) modal.style.display = 'none';
     };
-});
 
-// Function to show add party modal
-function showAddPartyModal(targetField) {
-    const modal = document.getElementById('addPartyModal');
-    modal.dataset.target = targetField;
-    modal.style.display = 'block';
-    document.getElementById('newPartyName').focus();
+    // Initialize theme
+    initTheme();
+    document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 }
 
-// Function to add party to dropdowns
-function addPartyToDropdowns(partyName) {
-    const spenderSelect = document.getElementById('spender');
-    const receiverSelect = document.getElementById('receiver');
-    
-    // Add to spender dropdown if not exists
-    if (!Array.from(spenderSelect.options).some(option => option.value === partyName)) {
-        const spenderOption = new Option(partyName, partyName);
-        spenderSelect.add(spenderOption);
+// Handle expense form submission
+async function handleExpenseSubmit(e) {
+    e.preventDefault();
+
+    if (!isAuthenticated()) {
+        alert('Please sign in to add expenses');
+        return;
     }
-    
-    // Add to receiver dropdown if not exists
-    if (!Array.from(receiverSelect.options).some(option => option.value === partyName)) {
-        const receiverOption = new Option(partyName, partyName);
-        receiverSelect.add(receiverOption);
+
+    const formData = {
+        spender: document.getElementById('spender').value,
+        receiver: document.getElementById('receiver').value,
+        amount: document.getElementById('amount').value,
+        remarks: document.getElementById('remarks').value,
+        date: new Date().toISOString()
+    };
+
+    try {
+        await addExpense(formData);
+        e.target.reset();
+        await loadExpenses();
+    } catch (error) {
+        console.error('Error adding expense:', error);
+        alert('Failed to add expense. Please try again.');
     }
 }
 
-// Function to update party dropdowns from expenses
-function updatePartyDropdowns(expenses) {
-    const parties = new Set();
+// Handle add party form submission
+function handleAddPartySubmit(e) {
+    e.preventDefault();
+    const newPartyName = document.getElementById('newPartyName').value;
+    const targetField = e.target.closest('.modal').dataset.target;
     
-    // Skip header row if it exists
-    const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
+    addPartyToDropdowns(newPartyName);
+    document.getElementById(targetField).value = newPartyName;
     
-    // Collect unique parties
-    expenses.slice(startIndex).forEach(expense => {
-        const [_, spender, receiver] = expense;
-        parties.add(spender);
-        parties.add(receiver);
-    });
-    
-    // Add parties to dropdowns
-    parties.forEach(party => addPartyToDropdowns(party));
+    e.target.closest('.modal').style.display = 'none';
+    e.target.reset();
 }
 
-// Function to show login button
+// Switch between tabs
+function switchTab(target) {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+    tabPanes.forEach(pane => pane.classList.remove('active'));
+    
+    document.querySelector(`.tab-button[data-tab="${target}"]`).classList.add('active');
+    document.querySelector(`.tab-pane[data-tab="${target}"]`).classList.add('active');
+
+    if (target === 'summary') {
+        updateSummary();
+    }
+}
+
+// Authentication functions
+function handleAuthClick() {
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=https://www.googleapis.com/auth/spreadsheets&include_granted_scopes=true`;
+    window.location.href = authUrl;
+}
+
 function showLoginButton() {
     const appContent = document.querySelector('.app-content');
     const authSection = document.getElementById('authSection');
@@ -150,12 +119,10 @@ function showLoginButton() {
     tabContent.style.display = 'none';
 }
 
-// Function to check if user is authenticated
 function isAuthenticated() {
     return !!localStorage.getItem('access_token');
 }
 
-// Function to handle OAuth callback
 function handleAuthCallback() {
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
@@ -163,38 +130,32 @@ function handleAuthCallback() {
     
     if (accessToken) {
         localStorage.setItem('access_token', accessToken);
-        window.location.hash = ''; // Clear the hash
-        const appContent = document.querySelector('.app-content');
-        const authSection = document.getElementById('authSection');
-        const tabs = document.querySelector('.tabs');
-        const tabContent = document.querySelector('.tab-content');
-        
-        appContent.classList.add('authenticated');
-        authSection.style.display = 'none';
-        tabs.style.display = 'flex';
-        tabContent.style.display = 'block';
+        window.location.hash = '';
+        showAuthenticatedContent();
         loadExpenses();
     }
 }
 
-// Function to check authentication status
-async function checkAuth() {
-    const token = localStorage.getItem('access_token');
+function showAuthenticatedContent() {
     const appContent = document.querySelector('.app-content');
     const authSection = document.getElementById('authSection');
     const tabs = document.querySelector('.tabs');
     const tabContent = document.querySelector('.tab-content');
     
+    appContent.classList.add('authenticated');
+    authSection.style.display = 'none';
+    tabs.style.display = 'flex';
+    tabContent.style.display = 'block';
+}
+
+async function checkAuth() {
+    const token = localStorage.getItem('access_token');
+    
     if (token) {
         try {
-            // Verify token is still valid
             await loadExpenses();
-            appContent.classList.add('authenticated');
-            authSection.style.display = 'none';
-            tabs.style.display = 'flex';
-            tabContent.style.display = 'block';
+            showAuthenticatedContent();
         } catch (error) {
-            // Token expired or invalid
             localStorage.removeItem('access_token');
             showLoginButton();
         }
@@ -203,18 +164,7 @@ async function checkAuth() {
     }
 }
 
-// Function to handle auth click
-function handleAuthClick() {
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=https://www.googleapis.com/auth/spreadsheets&include_granted_scopes=true`;
-    window.location.href = authUrl;
-}
-
-// Check for OAuth callback
-if (window.location.hash) {
-    handleAuthCallback();
-}
-
-// Function to add a new expense
+// API functions
 async function addExpense(expense) {
     const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E:append?valueInputOption=USER_ENTERED`, {
         method: 'POST',
@@ -235,7 +185,6 @@ async function addExpense(expense) {
 
     if (!response.ok) {
         if (response.status === 401) {
-            // Token expired
             localStorage.removeItem('access_token');
             showLoginButton();
             throw new Error('Please sign in again');
@@ -244,49 +193,68 @@ async function addExpense(expense) {
     }
 }
 
-// Function to load expenses
 async function loadExpenses() {
-    try {
-        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E`, {
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
-            }
-        });
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                // Token expired
-                localStorage.removeItem('access_token');
-                showLoginButton();
-                throw new Error('Please sign in again');
-            }
-            throw new Error('Failed to load expenses');
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E`, {
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('access_token')
         }
+    });
 
-        const data = await response.json();
-        const expenses = data.values || [];
-        updatePartyDropdowns(expenses);
-        displayExpenses(expenses);
-        
-        // Update party filter options
-        updatePartyFilter(expenses);
-        
-        // Update summary if visible
-        if (document.getElementById('partySummary').style.display !== 'none') {
-            updatePartySummary();
+    if (!response.ok) {
+        if (response.status === 401) {
+            localStorage.removeItem('access_token');
+            showLoginButton();
+            throw new Error('Please sign in again');
         }
-    } catch (error) {
-        console.error('Error loading expenses:', error);
-        alert('Failed to load expenses. Please refresh the page.');
+        throw new Error('Failed to load expenses');
+    }
+
+    const data = await response.json();
+    const expenses = data.values || [];
+    updatePartyDropdowns(expenses);
+    displayExpenses(expenses);
+    updatePartyFilter(expenses);
+    return expenses;
+}
+
+// UI helper functions
+function showAddPartyModal(targetField) {
+    const modal = document.getElementById('addPartyModal');
+    modal.dataset.target = targetField;
+    modal.style.display = 'block';
+    document.getElementById('newPartyName').focus();
+}
+
+function addPartyToDropdowns(partyName) {
+    const spenderSelect = document.getElementById('spender');
+    const receiverSelect = document.getElementById('receiver');
+    
+    if (!Array.from(spenderSelect.options).some(option => option.value === partyName)) {
+        spenderSelect.add(new Option(partyName, partyName));
+    }
+    
+    if (!Array.from(receiverSelect.options).some(option => option.value === partyName)) {
+        receiverSelect.add(new Option(partyName, partyName));
     }
 }
 
-// Function to display expenses
+function updatePartyDropdowns(expenses) {
+    const parties = new Set();
+    const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
+    
+    expenses.slice(startIndex).forEach(expense => {
+        const [_, spender, receiver] = expense;
+        parties.add(spender);
+        parties.add(receiver);
+    });
+    
+    parties.forEach(party => addPartyToDropdowns(party));
+}
+
 function displayExpenses(expenses) {
     const expensesList = document.getElementById('expensesList');
     expensesList.innerHTML = '';
 
-    // Skip header row if it exists
     const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
 
     expenses.slice(startIndex).reverse().forEach(expense => {
@@ -302,6 +270,46 @@ function displayExpenses(expenses) {
         `;
         expensesList.appendChild(expenseElement);
     });
+}
+
+function updatePartyFilter(expenses) {
+    const filter = document.getElementById('summaryPartyFilter');
+    const parties = new Set();
+    
+    const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
+    
+    expenses.slice(startIndex).forEach(expense => {
+        const [_, spender, receiver] = expense;
+        parties.add(spender);
+        parties.add(receiver);
+    });
+    
+    filter.innerHTML = '<option value="all">All Parties</option>' +
+        Array.from(parties)
+            .sort()
+            .map(party => `<option value="${party}">${party}</option>`)
+            .join('');
+    
+    filter.onchange = updateSummary;
+}
+
+// Theme functions
+function initTheme() {
+    const theme = localStorage.getItem('theme') || 
+                 (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+// Check for OAuth callback
+if (window.location.hash) {
+    handleAuthCallback();
 }
 
 // Function to toggle summary view
@@ -431,52 +439,6 @@ function calculateTotals(summary) {
     }), { spent: 0, received: 0, balance: 0 });
 }
 
-// Function to update party filter options
-function updatePartyFilter(expenses) {
-    const filter = document.getElementById('summaryPartyFilter');
-    const parties = new Set();
-    
-    // Skip header row if it exists
-    const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
-    
-    // Collect unique parties
-    expenses.slice(startIndex).forEach(expense => {
-        const [_, spender, receiver] = expense;
-        parties.add(spender);
-        parties.add(receiver);
-    });
-    
-    // Update filter options
-    filter.innerHTML = '<option value="all">All Parties</option>' +
-        Array.from(parties)
-            .sort()
-            .map(party => `<option value="${party}">${party}</option>`)
-            .join('');
-    
-    // Add change event listener
-    filter.onchange = updatePartySummary;
-}
-
-// Theme handling
-function initTheme() {
-    const theme = localStorage.getItem('theme') || 
-                 (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
-}
-
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-}
-
-// Initialize theme
-initTheme();
-
-// Add theme toggle event listener
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
-
 // Function to update summary
 async function updateSummary() {
     const partyFilter = document.getElementById('summaryPartyFilter');
@@ -563,7 +525,4 @@ function displaySummary(summary, container) {
             </div>
         </div>
     `;
-}
-
-// Add event listener for party filter
-document.getElementById('summaryPartyFilter').addEventListener('change', updateSummary); 
+} 
