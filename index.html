@@ -70,77 +70,85 @@
         </header>
 
         <main class="app-content">
-            <section class="card" aria-labelledby="add-expense-title">
-                <h2 id="add-expense-title"><i class="fas fa-plus-circle" aria-hidden="true"></i> Add New Expense</h2>
-                <form id="expenseForm" class="expense-form" novalidate>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="spender">Spender</label>
-                            <div class="select-with-add">
-                                <select id="spender" name="spender" required aria-label="Select spender">
-                                    <option value="">Select Spender</option>
-                                </select>
-                                <button type="button" class="icon-button" onclick="showAddPartyModal('spender')" aria-label="Add new spender">
-                                    <i class="fas fa-plus" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="receiver">Receiver</label>
-                            <div class="select-with-add">
-                                <select id="receiver" name="receiver" required aria-label="Select receiver">
-                                    <option value="">Select Receiver</option>
-                                </select>
-                                <button type="button" class="icon-button" onclick="showAddPartyModal('receiver')" aria-label="Add new receiver">
-                                    <i class="fas fa-plus" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="amount">Amount</label>
-                            <div class="amount-input">
-                                <span class="currency-symbol" aria-hidden="true">₹</span>
-                                <input type="number" id="amount" name="amount" step="0.01" required min="0" 
-                                       aria-label="Enter amount in rupees" inputmode="decimal">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group full-width">
-                            <label for="remarks">Remarks</label>
-                            <textarea id="remarks" name="remarks" rows="2" aria-label="Enter remarks" 
-                                      maxlength="200" placeholder="Optional remarks (max 200 characters)"></textarea>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="primary-button">
-                        <i class="fas fa-save" aria-hidden="true"></i> Add Expense
-                    </button>
-                </form>
-            </section>
+            <div class="tabs">
+                <button class="tab-button active" data-tab="expenses">
+                    <i class="fas fa-list" aria-hidden="true"></i> Expenses
+                </button>
+                <button class="tab-button" data-tab="summary">
+                    <i class="fas fa-chart-pie" aria-hidden="true"></i> Summary
+                </button>
+            </div>
 
-            <section class="card" aria-labelledby="party-summary-title" style="overflow: auto;">
-                <div class="card-header">
-                    <h2 id="party-summary-title"><i class="fas fa-chart-pie" aria-hidden="true"></i> Party Summary</h2>
-                    <button type="button" class="secondary-button summary-toggle" onclick="toggleSummaryView()" aria-expanded="false">
-                        <i class="fas fa-chevron-down" aria-hidden="true"></i> <span class="toggle-text">Show Summary</span>
-                    </button>
-                </div>
-                <div id="partySummary" class="party-summary" style="display: none;" aria-hidden="true">
-                    <div class="summary-filters">
-                        <select id="summaryPartyFilter" aria-label="Filter by party">
-                            <option value="all">All Parties</option>
-                        </select>
-                    </div>
-                    <div id="summaryContent" class="summary-content"></div>
-                </div>
-            </section>
+            <div class="tab-content">
+                <div id="expensesTab" class="tab-pane active">
+                    <section class="card" aria-labelledby="add-expense-title">
+                        <h2 id="add-expense-title"><i class="fas fa-plus-circle" aria-hidden="true"></i> Add New Expense</h2>
+                        <form id="expenseForm" class="expense-form" novalidate>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="spender">Spender</label>
+                                    <div class="select-with-add">
+                                        <select id="spender" name="spender" required aria-label="Select spender">
+                                            <option value="">Select Spender</option>
+                                        </select>
+                                        <button type="button" class="icon-button" onclick="showAddPartyModal('spender')" aria-label="Add new spender">
+                                            <i class="fas fa-plus" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="receiver">Receiver</label>
+                                    <div class="select-with-add">
+                                        <select id="receiver" name="receiver" required aria-label="Select receiver">
+                                            <option value="">Select Receiver</option>
+                                        </select>
+                                        <button type="button" class="icon-button" onclick="showAddPartyModal('receiver')" aria-label="Add new receiver">
+                                            <i class="fas fa-plus" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="amount">Amount</label>
+                                    <div class="amount-input">
+                                        <span class="currency-symbol" aria-hidden="true">₹</span>
+                                        <input type="number" id="amount" name="amount" step="0.01" required min="0" 
+                                               aria-label="Enter amount in rupees" inputmode="decimal">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group full-width">
+                                    <label for="remarks">Remarks</label>
+                                    <textarea id="remarks" name="remarks" rows="2" aria-label="Enter remarks" 
+                                              maxlength="200" placeholder="Optional remarks (max 200 characters)"></textarea>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="primary-button">
+                                <i class="fas fa-save" aria-hidden="true"></i> Add Expense
+                            </button>
+                        </form>
+                    </section>
 
-            <section class="card" aria-labelledby="recent-expenses-title">
-                <h2 id="recent-expenses-title"><i class="fas fa-history" aria-hidden="true"></i> Recent Expenses</h2>
-                <div id="expensesList" class="expenses-list" role="list"></div>
-            </section>
+                    <section class="card" aria-labelledby="recent-expenses-title">
+                        <h2 id="recent-expenses-title"><i class="fas fa-history" aria-hidden="true"></i> Recent Expenses</h2>
+                        <div id="expensesList" class="expenses-list" role="list"></div>
+                    </section>
+                </div>
+
+                <div id="summaryTab" class="tab-pane">
+                    <section class="card" aria-labelledby="party-summary-title">
+                        <h2 id="party-summary-title"><i class="fas fa-chart-pie" aria-hidden="true"></i> Party Summary</h2>
+                        <div class="summary-filters">
+                            <select id="summaryPartyFilter" aria-label="Filter by party">
+                                <option value="all">All Parties</option>
+                            </select>
+                        </div>
+                        <div id="summaryContent" class="summary-content"></div>
+                    </section>
+                </div>
+            </div>
         </main>
     </div>
 

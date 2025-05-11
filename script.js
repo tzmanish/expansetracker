@@ -1,15 +1,37 @@
 // Google Sheets API configuration
 const SPREADSHEET_ID = '1Hj_kCide2ZJbpSKltBGS_wjLyqzYdZM7if0bBgZu2d0';
-const SHEET_NAME = 'Sheet1';
-const CLIENT_ID = '683998895208-c0eappqqhfum6g4s05iq91nkj0e9j98t.apps.googleusercontent.com'; // Replace with your OAuth 2.0 Client ID
+const SHEET_NAME = 'Expenses';
+const CLIENT_ID = '683998895208-c0eappqqhfum6g4s05iq91nkj0e9j98t.apps.googleusercontent.com';
+const REDIRECT_URI = 'https://manishkushwaha.dev/expansetracker/';
 
 // Initialize the form and expenses list
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('expenseForm');
     const expensesList = document.getElementById('expensesList');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanes = document.querySelectorAll('.tab-pane');
     const addPartyForm = document.getElementById('addPartyForm');
     const modal = document.getElementById('addPartyModal');
     const closeBtn = document.querySelector('.close');
+
+    // Initialize tabs
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const target = button.getAttribute('data-tab');
+            
+            // Update active states
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+            
+            button.classList.add('active');
+            document.querySelector(`.tab-pane[data-tab="${target}"]`).classList.add('active');
+
+            // If switching to summary tab, update the summary
+            if (target === 'summary') {
+                updateSummary();
+            }
+        });
+    });
 
     // Check if user is authenticated
     checkAuth();
@@ -115,46 +137,10 @@ function updatePartyDropdowns(expenses) {
     parties.forEach(party => addPartyToDropdowns(party));
 }
 
-// Function to check authentication status
-async function checkAuth() {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-        try {
-            // Verify token is still valid
-            await loadExpenses();
-        } catch (error) {
-            // Token expired or invalid
-            localStorage.removeItem('access_token');
-            showLoginButton();
-        }
-    } else {
-        showLoginButton();
-    }
-}
-
 // Function to show login button
 function showLoginButton() {
     const appContent = document.querySelector('.app-content');
-    const loginButton = document.createElement('button');
-    loginButton.textContent = 'Sign in with Google';
-    loginButton.className = 'login-button';
-    loginButton.onclick = handleAuthClick;
-    
-    // Insert login button at the top of the app content
-    appContent.insertBefore(loginButton, appContent.firstChild);
-}
-
-// Function to handle login button click
-function handleAuthClick() {
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${CLIENT_ID}` +
-        `&redirect_uri=${encodeURIComponent(window.location.href)}` +
-        `&response_type=token` +
-        `&scope=${encodeURIComponent('https://www.googleapis.com/auth/spreadsheets')}` +
-        `&include_granted_scopes=true` +
-        `&prompt=consent`;
-
-    window.location.href = authUrl;
+    appContent.classList.remove('authenticated');
 }
 
 // Function to check if user is authenticated
@@ -171,7 +157,29 @@ function handleAuthCallback() {
     if (accessToken) {
         localStorage.setItem('access_token', accessToken);
         window.location.hash = ''; // Clear the hash
+        const appContent = document.querySelector('.app-content');
+        appContent.classList.add('authenticated');
         loadExpenses();
+    }
+}
+
+// Function to check authentication status
+async function checkAuth() {
+    const token = localStorage.getItem('access_token');
+    const appContent = document.querySelector('.app-content');
+    
+    if (token) {
+        try {
+            // Verify token is still valid
+            await loadExpenses();
+            appContent.classList.add('authenticated');
+        } catch (error) {
+            // Token expired or invalid
+            localStorage.removeItem('access_token');
+            showLoginButton();
+        }
+    } else {
+        showLoginButton();
     }
 }
 
@@ -441,4 +449,95 @@ function toggleTheme() {
 initTheme();
 
 // Add theme toggle event listener
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme); 
+document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
+
+// Function to update summary
+async function updateSummary() {
+    const partyFilter = document.getElementById('partyFilter');
+    const selectedParty = partyFilter.value;
+    const summaryContent = document.getElementById('summaryContent');
+    
+    try {
+        const expenses = await loadExpenses();
+        const filteredExpenses = selectedParty === 'all' 
+            ? expenses 
+            : expenses.filter(expense => expense.party === selectedParty);
+
+        const summary = calculateSummary(filteredExpenses);
+        displaySummary(summary, summaryContent);
+    } catch (error) {
+        console.error('Error updating summary:', error);
+        summaryContent.innerHTML = '<p class="error-message">Error loading summary. Please try again.</p>';
+    }
+}
+
+// Function to calculate summary
+function calculateSummary(expenses) {
+    const summary = {
+        total: 0,
+        byParty: {},
+        byCategory: {}
+    };
+
+    expenses.forEach(expense => {
+        const amount = parseFloat(expense.amount);
+        summary.total += amount;
+
+        // Group by party
+        if (!summary.byParty[expense.party]) {
+            summary.byParty[expense.party] = 0;
+        }
+        summary.byParty[expense.party] += amount;
+
+        // Group by category
+        if (!summary.byCategory[expense.category]) {
+            summary.byCategory[expense.category] = 0;
+        }
+        summary.byCategory[expense.category] += amount;
+    });
+
+    return summary;
+}
+
+// Function to display summary
+function displaySummary(summary, container) {
+    const partyList = Object.entries(summary.byParty)
+        .map(([party, amount]) => `
+            <div class="summary-item">
+                <span class="summary-label">${party}</span>
+                <span class="summary-value">₹${amount.toFixed(2)}</span>
+            </div>
+        `)
+        .join('');
+
+    const categoryList = Object.entries(summary.byCategory)
+        .map(([category, amount]) => `
+            <div class="summary-item">
+                <span class="summary-label">${category}</span>
+                <span class="summary-value">₹${amount.toFixed(2)}</span>
+            </div>
+        `)
+        .join('');
+
+    container.innerHTML = `
+        <div class="summary-section">
+            <h3>Total Expenses</h3>
+            <div class="summary-total">₹${summary.total.toFixed(2)}</div>
+        </div>
+        <div class="summary-section">
+            <h3>By Party</h3>
+            <div class="summary-list">
+                ${partyList}
+            </div>
+        </div>
+        <div class="summary-section">
+            <h3>By Category</h3>
+            <div class="summary-list">
+                ${categoryList}
+            </div>
+        </div>
+    `;
+}
+
+// Add event listener for party filter
+document.getElementById('partyFilter').addEventListener('change', updateSummary); 
