@@ -90,14 +90,24 @@ function switchTab(target) {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabPanes = document.querySelectorAll('.tab-pane');
     
+    // Update active states
     tabButtons.forEach(btn => btn.classList.remove('active'));
     tabPanes.forEach(pane => pane.classList.remove('active'));
     
-    document.querySelector(`.tab-button[data-tab="${target}"]`).classList.add('active');
-    document.querySelector(`.tab-pane[data-tab="${target}"]`).classList.add('active');
-
-    if (target === 'summary') {
-        updateSummary();
+    // Activate selected tab
+    const selectedButton = document.querySelector(`.tab-button[data-tab="${target}"]`);
+    const selectedPane = document.querySelector(`.tab-pane[data-tab="${target}"]`);
+    
+    if (selectedButton && selectedPane) {
+        selectedButton.classList.add('active');
+        selectedPane.classList.add('active');
+        
+        // Update content based on selected tab
+        if (target === 'summary') {
+            updateSummary();
+        } else if (target === 'expenses') {
+            loadExpenses();
+        }
     }
 }
 
@@ -194,30 +204,37 @@ async function addExpense(expense) {
 }
 
 async function loadExpenses() {
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E`, {
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('access_token')
-        }
-    });
+    try {
+        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E`, {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
 
-    if (!response.ok) {
-        if (response.status === 401) {
-            localStorage.removeItem('access_token');
-            showLoginButton();
-            throw new Error('Please sign in again');
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('access_token');
+                showLoginButton();
+                throw new Error('Please sign in again');
+            }
+            throw new Error('Failed to load expenses');
         }
-        throw new Error('Failed to load expenses');
+
+        const data = await response.json();
+        const expenses = data.values || [];
+        
+        // Update UI elements
+        updatePartyDropdowns(expenses);
+        displayExpenses(expenses);
+        updatePartyFilter(expenses);
+        
+        return expenses;
+    } catch (error) {
+        console.error('Error loading expenses:', error);
+        const expensesList = document.getElementById('expensesList');
+        expensesList.innerHTML = '<p class="error-message">Error loading expenses. Please try again.</p>';
+        throw error;
     }
-
-    const data = await response.json();
-    const expenses = data.values || [];
-    
-    // Update UI elements
-    updatePartyDropdowns(expenses);
-    displayExpenses(expenses);
-    updatePartyFilter(expenses);
-    
-    return expenses;
 }
 
 // UI helper functions
@@ -256,9 +273,17 @@ function updatePartyDropdowns(expenses) {
 
 function displayExpenses(expenses) {
     const expensesList = document.getElementById('expensesList');
+    if (!expensesList) return;
+
     expensesList.innerHTML = '';
 
+    // Skip header row if it exists
     const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
+
+    if (expenses.length <= startIndex) {
+        expensesList.innerHTML = '<p class="no-expenses">No expenses recorded yet.</p>';
+        return;
+    }
 
     expenses.slice(startIndex).reverse().forEach(expense => {
         const [date, spender, receiver, amount, remarks] = expense;
@@ -445,11 +470,13 @@ function calculateTotals(summary) {
 // Function to update summary
 async function updateSummary() {
     const partyFilter = document.getElementById('summaryPartyFilter');
-    const selectedParty = partyFilter.value;
     const summaryContent = document.getElementById('summaryContent');
     
+    if (!partyFilter || !summaryContent) return;
+
     try {
         const expenses = await loadExpenses();
+        const selectedParty = partyFilter.value;
         const filteredExpenses = selectedParty === 'all' 
             ? expenses 
             : expenses.filter(expense => expense[1] === selectedParty || expense[2] === selectedParty);
