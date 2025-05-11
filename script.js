@@ -148,7 +148,7 @@ function showLoginButton() {
 function handleAuthClick() {
     const client = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/spreadsheets.currentonly',
+        scope: 'https://www.googleapis.com/auth/spreadsheets',
         callback: (response) => {
             if (response.access_token) {
                 localStorage.setItem('access_token', response.access_token);
