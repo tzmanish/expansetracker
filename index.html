@@ -1,286 +1,171 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turiya Prakalpa - Awaken Innovation with AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <meta name="description" content="Expense Tracker - Track your expenses and manage party-wise summaries">
+    <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)">
+    <title>Expense Tracker</title>
+    
+    <!-- Resource hints -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    
+    <!-- Critical CSS -->
+    <style>
+        /* Critical path CSS for initial render */
+        :root {
+            --primary-color: #2563eb;
+            --background-color: #f1f5f9;
+            --card-background: #ffffff;
+        }
+        [data-theme="dark"] {
+            --primary-color: #3b82f6;
+            --background-color: #0f172a;
+            --card-background: #1e293b;
+        }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background-color);
+        }
+        .app-container {
+            min-height: 100vh;
+        }
+    </style>
+    
+    <!-- Deferred CSS loading -->
+    <link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
+    
+    <!-- Deferred Font Awesome loading -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" 
+          integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" 
+          crossorigin="anonymous" referrerpolicy="no-referrer" 
+          media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" 
+              integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" 
+              crossorigin="anonymous" referrerpolicy="no-referrer">
+    </noscript>
+    
+    <!-- Deferred Google Fonts loading -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" 
+          rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" 
+              rel="stylesheet">
+    </noscript>
 </head>
-<body class="bg-light-gray text-gray-900">
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <a href="#" class="flex items-center">
-                <span class="text-2xl font-bold text-primary-blue">
-                    <span class="font-light">Turiya</span>Prakalpa
-                </span>
-                <span class="text-xs text-gray-500 ml-2">by Patliputra Prakalp</span>
-            </a>
-            
-            <div class="hidden md:flex space-x-6 items-center text-sm">
-                <a href="#crisis" class="text-gray-700 hover:text-primary-blue">The Crisis</a>
-                <a href="#solution" class="text-gray-700 hover:text-primary-blue">Our Solution</a>
-                <a href="#why-ai" class="text-gray-700 hover:text-primary-blue">Why AI?</a>
-                <a href="#coe-ai" class="text-gray-700 hover:text-primary-blue">CoE-AI Details</a>
-                <a href="#poc" class="text-gray-700 hover:text-primary-blue">Proof of Concept</a>
-                <a href="#cta-section" class="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-dark-blue transition duration-300 btn-hover">Get Involved</a>
-            </div>
-            
-            <button id="mobile-menu-button" class="md:hidden text-gray-600 focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-                </svg>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1><i class="fas fa-wallet" aria-hidden="true"></i> Expense Tracker</h1>
+            <button type="button" class="theme-toggle" aria-label="Toggle dark mode">
+                <i class="fas fa-sun" aria-hidden="true"></i>
+                <i class="fas fa-moon" aria-hidden="true"></i>
             </button>
-        </nav>
-        <div id="mobile-menu" class="md:hidden hidden bg-white py-2 border-t border-gray-200">
-            <a href="#crisis" class="block px-6 py-2 text-gray-700 hover:bg-gray-100">The Crisis</a>
-            <a href="#solution" class="block px-6 py-2 text-gray-700 hover:bg-gray-100">Our Solution</a>
-            <a href="#why-ai" class="block px-6 py-2 text-gray-700 hover:bg-gray-100">Why AI?</a>
-            <a href="#coe-ai" class="block px-6 py-2 text-gray-700 hover:bg-gray-100">CoE-AI Details</a>
-            <a href="#poc" class="block px-6 py-2 text-gray-700 hover:bg-gray-100">Proof of Concept</a>
-            <a href="#cta-section" class="block px-6 py-2 text-primary-blue font-semibold hover:bg-gray-100">Get Involved</a>
-        </div>
-    </header>
+        </header>
 
-    <main>
-
-        <section class="hero-height bg-custom-gradient text-white relative">
-
-            
-            <div class="absolute inset-0 flex items-center justify-center opacity-30">
-                <svg class="w-1/2 h-1/2" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <defs>
-                        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#FFFFFF" stroke-width="0.5" opacity="0.3"/>
-                        </pattern>
-                    </defs>
-                    <rect width="100" height="100" fill="url(#grid)"/>
-                    <g stroke="#FFFFFF" fill="none">
-                        <circle cx="30" cy="40" r="5"/>
-                        <circle cx="50" cy="60" r="5"/>
-                        <circle cx="70" cy="30" r="5"/>
-                        <path d="M30 40 L50 60 L70 30" stroke-width="1"/>
-                    </g>
-                </svg>
-            </div>
-
-            <div class="container mx-auto px-6 text-center relative z-10 fade-in">
-                <h1 class="text-4xl md:text-[36px] lg:text-5xl font-extrabold mb-4">Awaken Innovation: Empowering India’s Youth with AI</h1>
-                <p class="text-lg md:text-[20px] font-normal mb-8 max-w-3xl mx-auto">Turiya Prakalpa transforms colleges into hubs of innovation, empowering youth to tackle regional challenges with global innovation, starting with AI Centres of Excellence.</p>
-                <div class="space-y-4 sm:space-y-0 sm:space-x-4">
-                    <a href="/investors" aria-label="Invest in Turiya Prakalpa" class="bg-primary-blue text-white text-[16px] font-semibold px-6 py-3 rounded-lg hover:bg-dark-blue transition duration-300 inline-block btn-hover" style="border-radius: 8px;">Invest in India’s Future</a>
-                    <a href="/colleges" aria-label="Collaborate with Turiya Prakalpa" class="bg-primary-blue text-white text-[16px] font-semibold px-6 py-3 rounded-lg hover:bg-dark-blue transition duration-300 inline-block btn-hover" style="border-radius: 8px;">Collaborate for a CoE</a>
-                    <a href="/students" aria-label="Join Turiya Prakalpa as a student" class="bg-primary-blue text-white text-[16px] font-semibold px-6 py-3 rounded-lg hover:bg-dark-blue transition duration-300 inline-block btn-hover" style="border-radius: 8px;">Join as a Student</a>
-                </div>
-            </div>
-        </section>
-
-        <section id="crisis" class="section-h-15 bg-dark-blue text-white">
-            <div class="container mx-auto px-6 fade-in">
-                <h2 class="text-2xl md:text-3xl font-bold text-center mb-6">What Are We Solving: India’s Innovation Crisis</h2>
-                <p class="text-center text-[16px] md:text-lg mb-8 max-w-4xl mx-auto">
-                    <span class="font-bold">We have failed to create a problem-solving mindset</span> in India’s youth. Our 43.3 million students (AISHE 2021-22) are trapped in a cycle of rote learning and job-chasing, disconnected from regional pain points like Bihar’s floods or Jharkhand’s healthcare gaps. Only 10% of colleges offer AI programs (NASSCOM 2023), and India lags in deeptech innovation, with just 3,000 deeptech startups compared to 30,000 in the U.S. (FICCI-Deloitte 2025). This is not a pipeline problem—<span class="font-semibold text-red-400">it’s a mindset crisis.</span>
-                </p>
-
-                <div class="grid md:grid-cols-2 gap-8 mb-8">
-                    <div class="bg-primary-blue p-6 rounded-lg">
-                        <h3 class="text-xl font-semibold mb-3 text-white">Why This Crisis Exists:</h3>
-                        <ul class="list-none space-y-2 text-gray-200 text-[14px] md:text-[12px]">
-                            <li><strong class="block text-white">Late Global Exposure:</strong> Indian youth are tail-enders, adopting technologies like AI years after the West, with minimal access to breakthroughs (e.g., only 16% of global AI talent, Bain & Capital 2022).</li>
-                            <li><strong class="block text-white">Zero Regional Exposure:</strong> Curricula ignore local challenges & pain-points, leaving students unaware of solvable problems.</li>
-                            <li><strong class="block text-white">No Encouragement to Innovate:</strong> Risk-averse education systems prioritize jobs over entrepreneurship, stifling original ideas.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-red-900 bg-opacity-50 p-6 rounded-lg border border-red-400">
-                         <h3 class="text-xl font-semibold mb-3 text-red-300">Impact of the Crisis:</h3>
-                         <blockquote class="text-lg italic text-red-200 border-l-4 border-red-400 pl-4 mb-4">
-                             “<span class="font-bold">We are workers, not innovators.</span>”
-                         </blockquote>
-                         <p class="text-gray-200 text-[14px] md:text-[12px]">India’s entrepreneurial ventures often mimic Western models, not deeptech solutions. Most educated youth waste years chasing jobs, with only 4% of graduates starting businesses (NASSCOM 2023). Less than 1% tackle societal challenges, leaving regional pain points unresolved and India’s $7.8 billion AI market (IBEF 2023) underutilized.</p>
-                    </div>
-                </div>
-
-                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center placeholder-visual bg-primary-blue rounded-lg p-4 fade-in">
-                    <div class="text-white">
-                        <svg class="w-8 h-8 mx-auto mb-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        <p class="font-bold">3K Deeptech Startups</p>
-                        <p class="text-xs">(vs 30K in U.S.)</p>
-                    </div>
-                     <div class="text-white">
-                         <svg class="w-8 h-8 mx-auto mb-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        <p class="font-bold">&lt;1% Youth Solve Societal Issues</p>
-                    </div>
-                     <div class="text-white">
-                         <svg class="w-8 h-8 mx-auto mb-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        <p class="font-bold">680M Lack Innovation Hubs</p>
-                        <p class="text-xs">(Underserved Regions)</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="solution" class="section-h-10 bg-light-gray text-gray-900">
-            <div class="container mx-auto px-6 fade-in">
-                <h2 class="text-2xl md:text-3xl font-bold text-center mb-6">Our Solution: Turiya Prakalpa’s CoEs</h2>
-                <p class="text-center text-[16px] md:text-lg mb-8 max-w-4xl mx-auto">Turiya Prakalpa’s Centres of Excellence transform colleges into hubs of innovation, empowering youth to solve regional pain points with global exposure.</p>
-
-                 <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-8 placeholder-visual bg-white p-4 rounded-lg shadow-sm fade-in">
-                     <div class="text-center">
-                        <svg class="w-10 h-10 mx-auto mb-2 text-primary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        <p class="font-bold text-[14px]">Build Solver Mindsets</p>
-                        <p class="text-xs text-gray-600">Projects & Hackathons</p>
-                    </div>
-                     <div class="text-center">
-                         <svg class="w-10 h-10 mx-auto mb-2 text-primary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                        <p class="font-bold text-[14px]">Connect to Global Ecosystems</p>
-                         <p class="text-xs text-gray-600">Partnerships & Certs</p>
-                    </div>
-                     <div class="text-center">
-                         <svg class="w-10 h-10 mx-auto mb-2 text-primary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2 1M4 7l2-1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
-                        <p class="font-bold text-[14px]">Scale to Deeptech</p>
-                         <p class="text-xs text-gray-600">Biotech, Quantum by Yr 5</p>
-                    </div>
-                </div>
-                 <p class="text-center text-[16px] font-semibold text-primary-blue mt-6">By year 3, we’ll train 20,000 students and incubate 10 startups, rewriting India’s innovation story.</p>
-            </div>
-        </section>
-
-        <section id="why-ai" class="section-h-10 bg-white text-gray-900">
-            <div class="container mx-auto px-6 fade-in">
-                 <div class="grid lg:grid-cols-2 gap-8 items-center">
-                     <div>
-                        <h2 class="text-2xl md:text-3xl font-bold mb-4">Why Start with AI?</h2>
-                        <h3 class="text-xl font-semibold mb-3 text-red-urgent">AI Revolution – Urgent Mass Enablement</h3>
-                        <p class="text-[16px] md:text-base mb-4">The AI revolution is here, and India risks falling behind. The U.S. trains 500,000 AI professionals annually, China’s AI Education Plan reaches 100,000+ schools (WEF 2025), while India’s 1 million AI job demand by 2026 (Wheebox 2023) faces a <span class="font-bold">90% skilling gap</span> (NASSCOM 2023). AI is becoming fundamental, reshaping 70% of jobs by 2030 (McKinsey 2025). Without urgent mass enablement, India’s youth will be relegated to low-skill roles in a $45.72 billion AI market (MarketResearchFuture 2025). Turiya Prakalpa is the answer, starting now.</p>
-                     </div>
-                     <div class="placeholder-visual bg-light-gray p-4 rounded-lg fade-in w-full md:w-3/4 lg:w-1/2 mx-auto">
-                         <div class="w-full">
-                            <h4 class="font-semibold mb-2 text-center">AI Skilling Comparison (Illustrative)</h4>
-                            <div class="flex justify-around items-end h-32 space-x-2">
-                                <div class="text-center">
-                                    <div class="bg-primary-blue w-8" style="height: 80%;"></div>
-                                    <p class="text-xs mt-1">U.S. (500K)</p>
-                                </div>
-                                <div class="text-center">
-                                    <div class="bg-chart-gray w-8" style="height: 60%;"></div>
-                                     <p class="text-xs mt-1">China (100K+ schools)</p>
-                                </div>
-                                 <div class="text-center">
-                                    <div class="bg-red-urgent w-8" style="height: 20%;"></div>
-                                     <p class="text-xs mt-1">India (&lt;100K skilled)</p>
-                                </div>
+        <main class="app-content">
+            <section class="card" aria-labelledby="add-expense-title">
+                <h2 id="add-expense-title"><i class="fas fa-plus-circle" aria-hidden="true"></i> Add New Expense</h2>
+                <form id="expenseForm" class="expense-form" novalidate>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="spender">Spender</label>
+                            <div class="select-with-add">
+                                <select id="spender" name="spender" required aria-label="Select spender">
+                                    <option value="">Select Spender</option>
+                                </select>
+                                <button type="button" class="icon-button" onclick="showAddPartyModal('spender')" aria-label="Add new spender">
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
+                                </button>
                             </div>
-                         </div>
-                     </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="coe-ai" class="section-h-10 bg-white text-gray-900">
-            <div class="container mx-auto px-6 fade-in">
-                 <div class="grid lg:grid-cols-2 gap-8 items-center">
-                     <div>
-                        <h2 class="text-2xl md:text-3xl font-bold mb-4">CoE-AI: Empowering Through AI</h2>
-                        <p class="text-[16px] md:text-base mb-4">Our AI Centres of Excellence empower youth with practical skilling and innovation:</p>
-                        <ul class="list-none space-y-2 text-[14px] md:text-sm">
-                            <li><strong class="block text-primary-blue">Tiered Framework:</strong> From AI Literacy to AI Innovators.</li>
-                            <li><strong class="block text-primary-blue">Ecosystem-Building:</strong> Hackathons and regional projects.</li>
-                            <li><strong class="block text-primary-blue">Student-Led Execution:</strong> Volunteers (1–2% of students) drive workshops, ensuring sustainability.</li>
-                        </ul>
-                         <p class="mt-4 text-[16px] font-semibold text-primary-blue">By month 18, 3,850 students trained across 7 CoEs, with 12 startups incubated.</p>
-                     </div>
-                     <div class="placeholder-visual bg-light-gray p-4 rounded-lg fade-in w-full md:w-3/4 lg:w-1/2 mx-auto">
-                         <div class="w-full text-center">
-                            <h4 class="font-semibold mb-3">AI Skilling Tiers</h4>
-                            <div class="space-y-1">
-                                <div class="p-2 rounded bg-secondary-blue text-white text-xs">AI Literacy (10 hours)</div>
-                                <div class="p-2 rounded bg-primary-blue text-white text-xs">AI Productivity (20 hours)</div>
-                                <div class="p-2 rounded bg-chart-gray text-gray-800 text-xs">AI Creators (40 hours)</div>
-                                <div class="p-2 rounded bg-red-urgent text-white text-xs">AI Innovators (60 hours)</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="receiver">Receiver</label>
+                            <div class="select-with-add">
+                                <select id="receiver" name="receiver" required aria-label="Select receiver">
+                                    <option value="">Select Receiver</option>
+                                </select>
+                                <button type="button" class="icon-button" onclick="showAddPartyModal('receiver')" aria-label="Add new receiver">
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
+                                </button>
                             </div>
-                         </div>
-                     </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="poc" class="section-h-5 bg-light-gray text-gray-900">
-            <div class="container mx-auto px-6 fade-in">
-                 <div class="grid lg:grid-cols-2 gap-8 items-center">
-                     <div>
-                        <h2 class="text-2xl md:text-3xl font-bold mb-4">Collaboration with IIBM: Proof of Concept</h2>
-                        <p class="text-[16px] md:text-base">Our pilot at IIBM Patna proves Turiya Prakalpa’s impact. We’ve secured <span class="font-bold text-primary-blue">100 workshop registrations</span> and an MoU nearing completion. By month 6, <span class="font-bold text-primary-blue">700 students</span> will gain AI Literacy.</p>
-                     </div>
-                      <div class="placeholder-visual bg-white p-2 rounded-lg shadow-sm fade-in w-full md:w-2/3 lg:w-1/2 mx-auto border-2 border-primary-blue">
-                         <img src="https://placehold.co/600x400/E0E0E0/444444?text=IIBM+Patna+Workshop/Lab" alt="IIBM Patna workshop or CoE lab" class="w-full h-auto rounded">
-                     </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="cta-section" class="section-h-5 bg-light-gray text-gray-900">
-            <div class="container mx-auto px-6 text-center fade-in">
-                <h2 class="text-2xl md:text-3xl font-bold mb-6">Be Part of India’s Innovation Awakening</h2>
-                <div class="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
-                     <article class="text-center">
-                        <p class="text-[14px] md:text-sm mb-2">
-                            <strong class="block">Investors:</strong>
-                            Join our ₹50 lakh seed round (at ₹8 Cr valuation) to shape a ₹1,000 Cr market.
-                        </p>
-                        <a href="/investors" class="bg-primary-blue text-white text-[16px] font-semibold px-5 py-2 rounded-lg hover:bg-dark-blue transition duration-300 inline-block btn-hover w-full sm:w-auto">Invest &rarr;</a>
-                    </article>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="amount">Amount</label>
+                            <div class="amount-input">
+                                <span class="currency-symbol" aria-hidden="true">₹</span>
+                                <input type="number" id="amount" name="amount" step="0.01" required min="0" 
+                                       aria-label="Enter amount in rupees" inputmode="decimal">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="remarks">Remarks</label>
+                            <textarea id="remarks" name="remarks" rows="2" aria-label="Enter remarks" 
+                                      maxlength="200" placeholder="Optional remarks (max 200 characters)"></textarea>
+                        </div>
+                    </div>
                     
-                    <article class="text-center">
-                        <p class="text-[14px] md:text-sm mb-2">
-                            <strong class="block">Colleges:</strong>
-                            Collaborate to host a CoE and empower your students.
-                        </p>
-                        <a href="/colleges" class="bg-primary-blue text-white text-[16px] font-semibold px-5 py-2 rounded-lg hover:bg-dark-blue transition duration-300 inline-block btn-hover w-full sm:w-auto">Collaborate &rarr;</a>
-                    </article>
-                    
-                    <article class="text-center">
-                        <p class="text-[14px] md:text-sm mb-2">
-                            <strong class="block">Students:</strong>
-                            Learn AI, solve real problems, and lead the future.
-                        </p>
-                        <a href="/students" class="bg-primary-blue text-white text-[16px] font-semibold px-5 py-2 rounded-lg hover:bg-dark-blue transition duration-300 inline-block btn-hover w-full sm:w-auto">Join &rarr;</a>
-                    </article>
+                    <button type="submit" class="primary-button">
+                        <i class="fas fa-save" aria-hidden="true"></i> Add Expense
+                    </button>
+                </form>
+            </section>
+
+            <section class="card" aria-labelledby="party-summary-title" style="overflow: auto;">
+                <div class="card-header">
+                    <h2 id="party-summary-title"><i class="fas fa-chart-pie" aria-hidden="true"></i> Party Summary</h2>
+                    <button type="button" class="secondary-button summary-toggle" onclick="toggleSummaryView()" aria-expanded="false">
+                        <i class="fas fa-chevron-down" aria-hidden="true"></i> <span class="toggle-text">Show Summary</span>
+                    </button>
                 </div>
-            </div>
-        </section>
+                <div id="partySummary" class="party-summary" style="display: none;" aria-hidden="true">
+                    <div class="summary-filters">
+                        <select id="summaryPartyFilter" aria-label="Filter by party">
+                            <option value="all">All Parties</option>
+                        </select>
+                    </div>
+                    <div id="summaryContent" class="summary-content"></div>
+                </div>
+            </section>
 
-    </main>
+            <section class="card" aria-labelledby="recent-expenses-title">
+                <h2 id="recent-expenses-title"><i class="fas fa-history" aria-hidden="true"></i> Recent Expenses</h2>
+                <div id="expensesList" class="expenses-list" role="list"></div>
+            </section>
+        </main>
+    </div>
 
-    <footer class="footer-fixed bg-dark-blue text-gray-200 py-3 h-[50px]">
-        <div class="container mx-auto px-6 h-full flex flex-col md:flex-row justify-between items-center">
-            <nav class="flex flex-wrap justify-center md:justify-start space-x-4">
-                <a href="/solution" class="text-gray-300 hover:text-white text-[14px] md:text-sm">Our Solution</a>
-                <a href="#contact-info" class="text-gray-300 hover:text-white text-[14px] md:text-sm">Contact</a>
-            </nav>
-            
-            <div class="flex items-center space-x-4">
-                <a href="#" aria-label="LinkedIn" class="text-gray-400 hover:text-white">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014V8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 7.427a1.406 1.406 0 112.811 0 1.406 1.406 0 01-2.811 0zM6.41 8.59H3.6v7.748h2.81V8.59z" clip-rule="evenodd" />
-                    </svg>
-                </a>
-                <a href="#" aria-label="Twitter/X" class="text-gray-400 hover:text-white">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                    </svg>
-                </a>
-                <a id="contact-info" href="mailto:info@turiyaprakalpa.org" class="text-gray-300 hover:text-white text-[14px] md:text-sm">info@turiyaprakalpa.org</a>
+    <div id="addPartyModal" class="modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title"><i class="fas fa-user-plus" aria-hidden="true"></i> Add New Party</h2>
+                <button type="button" class="icon-button close" aria-label="Close modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
             </div>
-            
-            <p class="hidden md:block text-[12px] md:text-sm">&copy; 2025 Patliputra Prakalp. Turiya Prakalpa Initiative.</p>
+            <form id="addPartyForm" class="party-form" novalidate>
+                <div class="form-group">
+                    <label for="newPartyName">Party Name</label>
+                    <input type="text" id="newPartyName" required aria-label="Enter party name" 
+                           maxlength="50" placeholder="Enter party name (max 50 characters)">
+                </div>
+                <button type="submit" class="primary-button">
+                    <i class="fas fa-plus" aria-hidden="true"></i> Add Party
+                </button>
+            </form>
         </div>
-    </footer>
+    </div>
 
-    <script src="script.js"></script>
-
+    <!-- Deferred script loading -->
+    <script src="script.js" defer></script>
 </body>
-</html>
+</html> 
