@@ -2,6 +2,7 @@
 const SPREADSHEET_ID = '1Hj_kCide2ZJbpSKltBGS_wjLyqzYdZM7if0bBgZu2d0';
 const SHEET_NAME = 'Sheet1';
 const CLIENT_ID = '683998895208-c0eappqqhfum6g4s05iq91nkj0e9j98t.apps.googleusercontent.com'; // Replace with your OAuth 2.0 Client ID
+const REDIRECT_URI = 'https://manishkushwaha.dev/expansetracker/';
 
 // Initialize the form and expenses list
 document.addEventListener('DOMContentLoaded', () => {
@@ -148,7 +149,7 @@ function handleAuthClick() {
     // Using currentonly scope but with a specific spreadsheet context
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${CLIENT_ID}` +
-        `&redirect_uri=${encodeURIComponent(window.location.href)}` +
+        `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
         `&response_type=token` +
         `&scope=${encodeURIComponent('https://www.googleapis.com/auth/spreadsheets.currentonly')}` +
         `&include_granted_scopes=true` +
@@ -190,8 +191,10 @@ async function addExpense(expense) {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
-            'X-Goog-Spreadsheet-Id': SPREADSHEET_ID // Add spreadsheet ID in header
+            'X-Goog-Spreadsheet-Id': SPREADSHEET_ID
         },
+        mode: 'cors',
+        credentials: 'include',
         body: JSON.stringify({
             values: [[
                 expense.date,
@@ -220,8 +223,10 @@ async function loadExpenses() {
         const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E`, {
             headers: {
                 'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
-                'X-Goog-Spreadsheet-Id': SPREADSHEET_ID // Add spreadsheet ID in header
-            }
+                'X-Goog-Spreadsheet-Id': SPREADSHEET_ID
+            },
+            mode: 'cors',
+            credentials: 'include'
         });
 
         if (!response.ok) {
