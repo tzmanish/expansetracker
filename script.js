@@ -134,14 +134,14 @@ async function checkAuth() {
 
 // Function to show login button
 function showLoginButton() {
-    const container = document.querySelector('.container');
+    const appContent = document.querySelector('.app-content');
     const loginButton = document.createElement('button');
     loginButton.textContent = 'Sign in with Google';
     loginButton.className = 'login-button';
     loginButton.onclick = handleAuthClick;
     
-    // Insert login button at the top of the container
-    container.insertBefore(loginButton, container.firstChild);
+    // Insert login button at the top of the app content
+    appContent.insertBefore(loginButton, appContent.firstChild);
 }
 
 // Function to handle login button click
