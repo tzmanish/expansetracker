@@ -173,7 +173,8 @@ async function addExpense(expense) {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Goog-Spreadsheet-Id': SPREADSHEET_ID
         },
         body: JSON.stringify({
             values: [[
@@ -204,7 +205,8 @@ async function loadExpenses() {
 
         const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:E`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'X-Goog-Spreadsheet-Id': SPREADSHEET_ID
             }
         });
 
