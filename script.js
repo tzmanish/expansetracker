@@ -148,7 +148,7 @@ function showLoginButton() {
 function handleAuthClick() {
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${CLIENT_ID}` +
-        `&redirect_uri=${encodeURIComponent(window.location.origin)}` +
+        `&redirect_uri=${encodeURIComponent(window.location.href)}` +
         `&response_type=token` +
         `&scope=${encodeURIComponent('https://www.googleapis.com/auth/spreadsheets')}` +
         `&include_granted_scopes=true` +
