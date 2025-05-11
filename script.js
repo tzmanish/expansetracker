@@ -211,9 +211,12 @@ async function loadExpenses() {
 
     const data = await response.json();
     const expenses = data.values || [];
+    
+    // Update UI elements
     updatePartyDropdowns(expenses);
     displayExpenses(expenses);
     updatePartyFilter(expenses);
+    
     return expenses;
 }
 
@@ -449,7 +452,7 @@ async function updateSummary() {
         const expenses = await loadExpenses();
         const filteredExpenses = selectedParty === 'all' 
             ? expenses 
-            : expenses.filter(expense => expense.party === selectedParty);
+            : expenses.filter(expense => expense[1] === selectedParty || expense[2] === selectedParty);
 
         const summary = calculateSummary(filteredExpenses);
         displaySummary(summary, summaryContent);
@@ -467,21 +470,32 @@ function calculateSummary(expenses) {
         byCategory: {}
     };
 
-    expenses.forEach(expense => {
-        const amount = parseFloat(expense.amount);
-        summary.total += amount;
+    // Skip header row if it exists
+    const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
 
-        // Group by party
-        if (!summary.byParty[expense.party]) {
-            summary.byParty[expense.party] = 0;
-        }
-        summary.byParty[expense.party] += amount;
+    expenses.slice(startIndex).forEach(expense => {
+        const [_, spender, receiver, amount, remarks] = expense;
+        const amountNum = parseFloat(amount);
+        summary.total += amountNum;
 
-        // Group by category
-        if (!summary.byCategory[expense.category]) {
-            summary.byCategory[expense.category] = 0;
+        // Group by party (spender)
+        if (!summary.byParty[spender]) {
+            summary.byParty[spender] = 0;
         }
-        summary.byCategory[expense.category] += amount;
+        summary.byParty[spender] += amountNum;
+
+        // Group by party (receiver)
+        if (!summary.byParty[receiver]) {
+            summary.byParty[receiver] = 0;
+        }
+        summary.byParty[receiver] -= amountNum;
+
+        // Group by category (using remarks as category)
+        const category = remarks || 'Uncategorized';
+        if (!summary.byCategory[category]) {
+            summary.byCategory[category] = 0;
+        }
+        summary.byCategory[category] += amountNum;
     });
 
     return summary;
@@ -493,7 +507,10 @@ function displaySummary(summary, container) {
         .map(([party, amount]) => `
             <div class="summary-item">
                 <span class="summary-label">${party}</span>
-                <span class="summary-value">₹${amount.toFixed(2)}</span>
+                <span class="summary-value ${amount >= 0 ? 'positive' : 'negative'}">
+                    ₹${Math.abs(amount).toFixed(2)}
+                    ${amount >= 0 ? '(Received)' : '(Spent)'}
+                </span>
             </div>
         `)
         .join('');
@@ -513,13 +530,13 @@ function displaySummary(summary, container) {
             <div class="summary-total">₹${summary.total.toFixed(2)}</div>
         </div>
         <div class="summary-section">
-            <h3>By Party</h3>
+            <h3>Party-wise Summary</h3>
             <div class="summary-list">
                 ${partyList}
             </div>
         </div>
         <div class="summary-section">
-            <h3>By Category</h3>
+            <h3>Category-wise Summary</h3>
             <div class="summary-list">
                 ${categoryList}
             </div>
