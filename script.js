@@ -369,23 +369,39 @@ function displayExpenses(expenses) {
 
 function updatePartyFilter(expenses) {
     const filter = document.getElementById('summaryPartyFilter');
-    const parties = new Set();
-    
-    const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
-    
-    expenses.slice(startIndex).forEach(expense => {
-        const [_, spender, receiver] = expense;
-        parties.add(spender);
-        parties.add(receiver);
-    });
-    
-    filter.innerHTML = '<option value="all">All Parties</option>' +
-        Array.from(parties)
-            .sort()
-            .map(party => `<option value="${party}">${party}</option>`)
-            .join('');
-    
-    filter.onchange = updateSummary;
+    if (!filter) {
+        console.error('Summary party filter element not found');
+        return;
+    }
+
+    try {
+        // Get unique parties from expenses
+        const parties = new Set();
+        const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
+        
+        expenses.slice(startIndex).forEach(expense => {
+            const [_, spender, receiver] = expense;
+            if (spender) parties.add(spender);
+            if (receiver) parties.add(receiver);
+        });
+
+        // Sort parties alphabetically
+        const sortedParties = Array.from(parties).sort();
+
+        // Update dropdown options
+        filter.innerHTML = `
+            <option value="all">All Parties</option>
+            ${sortedParties.map(party => `<option value="${party}">${party}</option>`).join('')}
+        `;
+
+        // Add change event listener if not already present
+        if (!filter.hasEventListener) {
+            filter.addEventListener('change', () => updateSummary());
+            filter.hasEventListener = true;
+        }
+    } catch (error) {
+        console.error('Error updating party filter:', error);
+    }
 }
 
 // Theme functions
@@ -412,14 +428,25 @@ async function updateSummary() {
     const partyFilter = document.getElementById('summaryPartyFilter');
     const summaryContent = document.getElementById('summaryContent');
     
-    if (!partyFilter || !summaryContent) return;
+    if (!partyFilter || !summaryContent) {
+        console.error('Summary elements not found');
+        return;
+    }
 
     try {
+        // Show loading state
+        summaryContent.innerHTML = '<div class="loading">Loading summary...</div>';
+
         const expenses = await loadExpenses();
         const selectedParty = partyFilter.value;
+        
+        // Filter expenses based on selected party
         const filteredExpenses = selectedParty === 'all' 
             ? expenses 
-            : expenses.filter(expense => expense[1] === selectedParty || expense[2] === selectedParty);
+            : expenses.filter(expense => {
+                const [_, spender, receiver] = expense;
+                return spender === selectedParty || receiver === selectedParty;
+            });
 
         const summary = calculateSummary(filteredExpenses);
         displaySummary(summary, summaryContent);
@@ -437,76 +464,99 @@ function calculateSummary(expenses) {
         byCategory: {}
     };
 
-    // Skip header row if it exists
-    const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
+    try {
+        // Skip header row if it exists
+        const startIndex = expenses[0]?.[0] === 'Date' ? 1 : 0;
 
-    expenses.slice(startIndex).forEach(expense => {
-        const [_, spender, receiver, amount, remarks] = expense;
-        const amountNum = parseFloat(amount);
-        summary.total += amountNum;
+        expenses.slice(startIndex).forEach(expense => {
+            const [_, spender, receiver, amount, remarks] = expense;
+            const amountNum = parseFloat(amount) || 0;
+            
+            // Update total
+            summary.total += amountNum;
 
-        // Group by party (spender)
-        if (!summary.byParty[spender]) {
-            summary.byParty[spender] = 0;
-        }
-        summary.byParty[spender] += amountNum;
+            // Update party summary
+            if (!summary.byParty[spender]) {
+                summary.byParty[spender] = { spent: 0, received: 0, balance: 0 };
+            }
+            if (!summary.byParty[receiver]) {
+                summary.byParty[receiver] = { spent: 0, received: 0, balance: 0 };
+            }
 
-        // Group by party (receiver)
-        if (!summary.byParty[receiver]) {
-            summary.byParty[receiver] = 0;
-        }
-        summary.byParty[receiver] -= amountNum;
+            summary.byParty[spender].spent += amountNum;
+            summary.byParty[spender].balance -= amountNum;
+            summary.byParty[receiver].received += amountNum;
+            summary.byParty[receiver].balance += amountNum;
 
-        // Group by category (using remarks as category)
-        const category = remarks || 'Uncategorized';
-        if (!summary.byCategory[category]) {
-            summary.byCategory[category] = 0;
-        }
-        summary.byCategory[category] += amountNum;
-    });
+            // Update category summary
+            const category = remarks || 'Uncategorized';
+            if (!summary.byCategory[category]) {
+                summary.byCategory[category] = 0;
+            }
+            summary.byCategory[category] += amountNum;
+        });
 
-    return summary;
+        return summary;
+    } catch (error) {
+        console.error('Error calculating summary:', error);
+        return {
+            total: 0,
+            byParty: {},
+            byCategory: {}
+        };
+    }
 }
 
 // Function to display summary
 function displaySummary(summary, container) {
-    const partyList = Object.entries(summary.byParty)
-        .map(([party, amount]) => `
-            <div class="summary-item">
-                <span class="summary-label">${party}</span>
-                <span class="summary-value ${amount >= 0 ? 'positive' : 'negative'}">
-                    ₹${Math.abs(amount).toFixed(2)}
-                    ${amount >= 0 ? '(Received)' : '(Spent)'}
-                </span>
-            </div>
-        `)
-        .join('');
+    try {
+        const partyList = Object.entries(summary.byParty)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([party, data]) => `
+                <div class="summary-item">
+                    <span class="summary-label">${party}</span>
+                    <div class="summary-details">
+                        <span class="summary-value negative">Spent: ₹${data.spent.toFixed(2)}</span>
+                        <span class="summary-value positive">Received: ₹${data.received.toFixed(2)}</span>
+                        <span class="summary-value ${data.balance >= 0 ? 'positive' : 'negative'}">
+                            Balance: ₹${Math.abs(data.balance).toFixed(2)}
+                            ${data.balance >= 0 ? '(Net Received)' : '(Net Spent)'}
+                        </span>
+                    </div>
+                </div>
+            `)
+            .join('');
 
-    const categoryList = Object.entries(summary.byCategory)
-        .map(([category, amount]) => `
-            <div class="summary-item">
-                <span class="summary-label">${category}</span>
-                <span class="summary-value">₹${amount.toFixed(2)}</span>
-            </div>
-        `)
-        .join('');
+        const categoryList = Object.entries(summary.byCategory)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([category, amount]) => `
+                <div class="summary-item">
+                    <span class="summary-label">${category}</span>
+                    <span class="summary-value">₹${amount.toFixed(2)}</span>
+                </div>
+            `)
+            .join('');
 
-    container.innerHTML = `
-        <div class="summary-section">
-            <h3>Total Expenses</h3>
-            <div class="summary-total">₹${summary.total.toFixed(2)}</div>
-        </div>
-        <div class="summary-section">
-            <h3>Party-wise Summary</h3>
-            <div class="summary-list">
-                ${partyList}
+        container.innerHTML = `
+            <div class="summary-section">
+                <h3>Total Expenses</h3>
+                <div class="summary-total">₹${summary.total.toFixed(2)}</div>
             </div>
-        </div>
-        <div class="summary-section">
-            <h3>Category-wise Summary</h3>
-            <div class="summary-list">
-                ${categoryList}
+            <div class="summary-section">
+                <h3>Party-wise Summary</h3>
+                <div class="summary-list">
+                    ${partyList}
+                </div>
             </div>
-        </div>
-    `;
+            <div class="summary-section">
+                <h3>Category-wise Summary</h3>
+                <div class="summary-list">
+                    ${categoryList}
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error displaying summary:', error);
+        container.innerHTML = '<p class="error-message">Error displaying summary. Please try again.</p>';
+    }
 } 
