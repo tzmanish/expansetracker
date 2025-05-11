@@ -453,7 +453,7 @@ document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 
 // Function to update summary
 async function updateSummary() {
-    const partyFilter = document.getElementById('partyFilter');
+    const partyFilter = document.getElementById('summaryPartyFilter');
     const selectedParty = partyFilter.value;
     const summaryContent = document.getElementById('summaryContent');
     
@@ -540,4 +540,4 @@ function displaySummary(summary, container) {
 }
 
 // Add event listener for party filter
-document.getElementById('partyFilter').addEventListener('change', updateSummary); 
+document.getElementById('summaryPartyFilter').addEventListener('change', updateSummary); 
